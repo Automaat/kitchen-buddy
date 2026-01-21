@@ -111,7 +111,7 @@ def generate_shopping_list(request: GenerateShoppingListRequest, db: Session = D
                     qty = float(ri.quantity) * scale
                     ingredient_totals[ing_id]["quantity"] += qty
                 except ValueError:
-                    pass
+                    pass  # non-numeric quantities (e.g., "to taste") are skipped
 
             if ri.unit and not ingredient_totals[ing_id]["unit"]:
                 ingredient_totals[ing_id]["unit"] = ri.unit

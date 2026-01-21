@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session, joinedload
 
 from app.core import DifficultyLevel, get_db
-from app.models import Favorite, Ingredient, Recipe, RecipeImage, RecipeIngredient, Tag
+from app.models import Ingredient, Recipe, RecipeImage, RecipeIngredient, Tag
 from app.schemas import (
     RecipeCreate,
     RecipeListResponse,
@@ -18,10 +18,6 @@ router = APIRouter()
 
 
 def get_recipe_response(recipe: Recipe) -> dict:
-    primary_image = next((img for img in recipe.images if img.is_primary), None)
-    if not primary_image and recipe.images:
-        primary_image = recipe.images[0]
-
     return {
         "id": recipe.id,
         "title": recipe.title,

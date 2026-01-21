@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.core import get_db
-from app.models import MealPlan, Recipe, RecipeImage
+from app.models import MealPlan, Recipe
 from app.schemas import (
     MealPlanCreate,
     MealPlanResponse,
