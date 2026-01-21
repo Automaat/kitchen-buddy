@@ -1,4 +1,6 @@
-from datetime import datetime
+from __future__ import annotations
+
+import datetime
 
 from pydantic import BaseModel
 
@@ -25,7 +27,7 @@ class IngredientUpdate(BaseModel):
 class IngredientResponse(IngredientBase):
     id: int
     is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     model_config = {"from_attributes": True}

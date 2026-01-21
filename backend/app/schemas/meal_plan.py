@@ -1,4 +1,6 @@
-from datetime import date, datetime
+from __future__ import annotations
+
+import datetime
 
 from pydantic import BaseModel
 
@@ -6,7 +8,7 @@ from app.core import MealType
 
 
 class MealPlanBase(BaseModel):
-    date: date
+    date: datetime.date
     meal_type: MealType
     recipe_id: int
     servings: int = 4
@@ -18,7 +20,7 @@ class MealPlanCreate(MealPlanBase):
 
 
 class MealPlanUpdate(BaseModel):
-    date: date | None = None
+    date: datetime.date | None = None
     meal_type: MealType | None = None
     recipe_id: int | None = None
     servings: int | None = None
@@ -38,13 +40,13 @@ class MealPlanResponse(MealPlanBase):
     id: int
     is_completed: bool
     recipe: RecipeSummary
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
 
 class WeekMealPlanResponse(BaseModel):
-    start_date: date
-    end_date: date
+    start_date: datetime.date
+    end_date: datetime.date
     meals: list[MealPlanResponse]

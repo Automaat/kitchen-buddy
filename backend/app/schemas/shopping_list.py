@@ -1,4 +1,6 @@
-from datetime import date, datetime
+from __future__ import annotations
+
+import datetime
 
 from pydantic import BaseModel
 
@@ -21,15 +23,15 @@ class ShoppingListItemResponse(BaseModel):
     is_checked: bool
     added_manually: bool
     category: IngredientCategory | None
-    created_at: datetime
+    created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
 
 class ShoppingListBase(BaseModel):
     name: str
-    start_date: date | None = None
-    end_date: date | None = None
+    start_date: datetime.date | None = None
+    end_date: datetime.date | None = None
 
 
 class ShoppingListCreate(ShoppingListBase):
@@ -40,13 +42,13 @@ class ShoppingListResponse(ShoppingListBase):
     id: int
     is_active: bool
     items: list[ShoppingListItemResponse]
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
 
 class GenerateShoppingListRequest(BaseModel):
     name: str
-    start_date: date
-    end_date: date
+    start_date: datetime.date
+    end_date: datetime.date
