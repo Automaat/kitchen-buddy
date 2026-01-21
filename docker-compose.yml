@@ -31,7 +31,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
-    image: node:22-alpine
+    image: node:24-alpine
     working_dir: /app
     volumes:
       - .:/app
