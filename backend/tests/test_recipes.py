@@ -79,7 +79,7 @@ class TestListRecipes:
         assert data[0]["title"] == "Easy Recipe"
 
     def test_tag_filter(self, client, ingredient, tag):
-        create = client.post(
+        client.post(
             "/api/recipes",
             json={
                 "title": "Tagged Recipe",

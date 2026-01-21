@@ -1,6 +1,3 @@
-import pytest
-
-
 class TestDashboard:
     def test_empty_dashboard(self, client):
         response = client.get("/api/dashboard")

@@ -1,6 +1,3 @@
-import pytest
-
-
 class TestListIngredients:
     def test_empty_list(self, client):
         response = client.get("/api/ingredients")

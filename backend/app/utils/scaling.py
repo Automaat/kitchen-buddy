@@ -8,7 +8,7 @@ def scale_quantity(quantity: str | None, original_servings: int, target_servings
 
     scale_factor = Fraction(target_servings, original_servings)
 
-    pattern = r"(\d+\.?\d*|\d+/\d+)"
+    pattern = r"(\d+/\d+|\d+\.?\d*)"
     matches = re.findall(pattern, quantity)
 
     if not matches:

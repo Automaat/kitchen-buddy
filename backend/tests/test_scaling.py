@@ -1,5 +1,3 @@
-import pytest
-
 from app.utils import scale_quantity
 
 
@@ -22,17 +20,13 @@ class TestScaleQuantity:
 
     def test_scales_fraction_individually(self):
         result = scale_quantity("1/2", 4, 8)
-        assert result == "4/2"
+        assert result == "1"
 
     def test_scales_fraction_parts_different_ratio(self):
         result = scale_quantity("1/4", 2, 4)
-        assert result == "2/8"
+        assert result == "0.5"
 
     def test_preserves_text_around_number(self):
-        result = scale_quantity("2 cups", 4, 8)
-        assert result == "4 cups"
-
-    def test_scales_single_number_in_range(self):
         result = scale_quantity("2 cups", 4, 8)
         assert result == "4 cups"
 
