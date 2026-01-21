@@ -1,6 +1,6 @@
 from .config import settings
 from .database import Base, get_db, engine
-from .enums import MealType, DifficultyLevel, IngredientCategory
+from .enums import MealType, DifficultyLevel, IngredientCategory, DietaryTag
 
 __all__ = [
     "settings",
@@ -10,4 +10,5 @@ __all__ = [
     "MealType",
     "DifficultyLevel",
     "IngredientCategory",
+    "DietaryTag",
 ]

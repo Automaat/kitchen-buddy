@@ -1,8 +1,9 @@
 <script lang="ts">
-	import type { Ingredient, Tag, DifficultyLevel } from '$lib/types';
+	import type { Ingredient, Tag, DifficultyLevel, DietaryTag } from '$lib/types';
 	import { api, uploadImage } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { allDietaryTags, dietaryTagLabels } from '$lib/constants/dietary-tags';
 
 	let ingredients: Ingredient[] = $state([]);
 	let tags: Tag[] = $state([]);
@@ -17,6 +18,8 @@
 	let servings = $state(4);
 	let difficulty = $state<DifficultyLevel>('medium');
 	let selectedTagIds = $state<number[]>([]);
+	let selectedDietaryTags = $state<DietaryTag[]>([]);
+	let sourceUrl = $state('');
 
 	let recipeIngredients = $state<
 		Array<{
@@ -53,6 +56,14 @@
 		recipeIngredients = recipeIngredients.filter((_, i) => i !== index);
 	}
 
+	function toggleDietaryTag(tag: DietaryTag) {
+		if (selectedDietaryTags.includes(tag)) {
+			selectedDietaryTags = selectedDietaryTags.filter((t) => t !== tag);
+		} else {
+			selectedDietaryTags = [...selectedDietaryTags, tag];
+		}
+	}
+
 	async function handleSubmit() {
 		if (!title.trim()) {
 			error = 'Title is required';
@@ -71,6 +82,8 @@
 				cook_time_minutes: cookTime,
 				servings,
 				difficulty,
+				dietary_tags: selectedDietaryTags,
+				source_url: sourceUrl || null,
 				tag_ids: selectedTagIds,
 				ingredients: recipeIngredients.filter((ri) => ri.ingredient_id)
 			});
@@ -89,7 +102,15 @@
 </script>
 
 <div class="max-w-3xl mx-auto space-y-6">
-	<h1 class="text-3xl font-bold text-gray-900">New Recipe</h1>
+	<div class="flex items-center justify-between">
+		<h1 class="text-3xl font-bold text-gray-900">New Recipe</h1>
+		<a
+			href="/recipes/import"
+			class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+		>
+			Import from URL
+		</a>
+	</div>
 
 	{#if error}
 		<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
@@ -183,6 +204,19 @@
 			</div>
 
 			<div>
+				<label for="sourceUrl" class="block text-sm font-medium text-gray-700 mb-1">
+					Source URL (optional)
+				</label>
+				<input
+					id="sourceUrl"
+					type="url"
+					bind:value={sourceUrl}
+					placeholder="https://example.com/recipe"
+					class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+				/>
+			</div>
+
+			<div>
 				<label for="image" class="block text-sm font-medium text-gray-700 mb-1">Image</label>
 				<input
 					id="image"
@@ -194,6 +228,23 @@
 					}}
 					class="w-full px-4 py-2 border rounded-lg"
 				/>
+			</div>
+
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-2">Dietary Tags</label>
+				<div class="flex flex-wrap gap-2">
+					{#each allDietaryTags as tag}
+						<button
+							type="button"
+							class="px-3 py-1 rounded-full text-sm {selectedDietaryTags.includes(tag)
+								? 'bg-green-600 text-white'
+								: 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+							onclick={() => toggleDietaryTag(tag)}
+						>
+							{dietaryTagLabels[tag]}
+						</button>
+					{/each}
+				</div>
 			</div>
 
 			{#if tags.length > 0}

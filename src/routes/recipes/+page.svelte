@@ -1,7 +1,8 @@
 <script lang="ts">
-	import type { RecipeListItem, Tag, DifficultyLevel } from '$lib/types';
+	import type { RecipeListItem, Tag, DifficultyLevel, DietaryTag } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { onMount } from 'svelte';
+	import { allDietaryTags, dietaryTagLabels } from '$lib/constants/dietary-tags';
 
 	let recipes: RecipeListItem[] = $state([]);
 	let tags: Tag[] = $state([]);
@@ -11,6 +12,7 @@
 	let search = $state('');
 	let selectedDifficulty = $state<DifficultyLevel | ''>('');
 	let selectedTagIds = $state<number[]>([]);
+	let selectedDietaryTags = $state<DietaryTag[]>([]);
 	let favoritesOnly = $state(false);
 
 	async function loadRecipes() {
@@ -21,6 +23,9 @@
 			if (search) params.set('search', search);
 			if (selectedDifficulty) params.set('difficulty', selectedDifficulty);
 			if (selectedTagIds.length) params.set('tag_ids', selectedTagIds.join(','));
+			if (selectedDietaryTags.length) {
+				selectedDietaryTags.forEach((tag) => params.append('dietary_tags', tag));
+			}
 			if (favoritesOnly) params.set('favorites_only', 'true');
 
 			recipes = await api.get<RecipeListItem[]>(`/recipes?${params}`);
@@ -51,6 +56,15 @@
 		} catch {
 			/* ignore */
 		}
+	}
+
+	function toggleDietaryTag(tag: DietaryTag) {
+		if (selectedDietaryTags.includes(tag)) {
+			selectedDietaryTags = selectedDietaryTags.filter((t) => t !== tag);
+		} else {
+			selectedDietaryTags = [...selectedDietaryTags, tag];
+		}
+		loadRecipes();
 	}
 
 	const difficultyColors: Record<DifficultyLevel, string> = {
@@ -116,6 +130,19 @@
 				{/each}
 			</div>
 		{/if}
+		<div class="flex flex-wrap gap-2">
+			<span class="text-sm text-gray-500 self-center">Dietary:</span>
+			{#each allDietaryTags as tag}
+				<button
+					class="px-3 py-1 rounded-full text-sm {selectedDietaryTags.includes(tag)
+						? 'bg-green-600 text-white'
+						: 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+					onclick={() => toggleDietaryTag(tag)}
+				>
+					{dietaryTagLabels[tag]}
+				</button>
+			{/each}
+		</div>
 	</div>
 
 	{#if loading}

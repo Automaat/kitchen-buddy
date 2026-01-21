@@ -12,6 +12,15 @@ export type IngredientCategory =
 	| 'condiments'
 	| 'spices'
 	| 'other';
+export type DietaryTag =
+	| 'vegetarian'
+	| 'vegan'
+	| 'gluten_free'
+	| 'dairy_free'
+	| 'nut_free'
+	| 'low_carb'
+	| 'keto'
+	| 'paleo';
 
 export interface Tag {
 	id: number;
@@ -53,10 +62,18 @@ export interface RecipeListItem {
 	cook_time_minutes: number | null;
 	servings: number;
 	difficulty: DifficultyLevel;
+	dietary_tags: DietaryTag[];
 	is_favorite: boolean;
 	primary_image_id: number | null;
 	tags: Tag[];
 	created_at: string;
+}
+
+export interface RecipeNote {
+	id: number;
+	content: string;
+	created_at: string;
+	updated_at: string;
 }
 
 export interface Recipe {
@@ -68,11 +85,14 @@ export interface Recipe {
 	cook_time_minutes: number | null;
 	servings: number;
 	difficulty: DifficultyLevel;
+	dietary_tags: DietaryTag[];
+	source_url: string | null;
 	is_active: boolean;
 	is_favorite: boolean;
 	ingredients: RecipeIngredient[];
 	images: RecipeImage[];
 	tags: Tag[];
+	notes: RecipeNote[];
 	created_at: string;
 	updated_at: string;
 }
@@ -139,4 +159,38 @@ export interface ScaledIngredient {
 	scaled_quantity: string | null;
 	unit: string | null;
 	notes: string | null;
+}
+
+export interface Collection {
+	id: number;
+	name: string;
+	description: string | null;
+	recipe_count: number;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface CollectionDetail extends Collection {
+	recipes: RecipeSummary[];
+}
+
+export interface RecipeImportResponse {
+	title: string | null;
+	description: string | null;
+	instructions: string | null;
+	prep_time_minutes: number | null;
+	cook_time_minutes: number | null;
+	servings: number | null;
+	ingredients: string[];
+	image_url: string | null;
+	source_url: string;
+}
+
+export interface CookingTimer {
+	id: string;
+	name: string;
+	duration: number;
+	remaining: number;
+	isRunning: boolean;
+	isPaused: boolean;
 }
