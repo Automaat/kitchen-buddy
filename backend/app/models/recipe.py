@@ -1,11 +1,11 @@
 from sqlalchemy import (
-    ARRAY,
     Boolean,
     Column,
     DateTime,
     Enum,
     ForeignKey,
     Integer,
+    JSON,
     LargeBinary,
     String,
     Text,
@@ -37,7 +37,7 @@ class Recipe(Base):
     cook_time_minutes = Column(Integer)
     servings = Column(Integer, default=4)
     difficulty = Column(Enum(DifficultyLevel), default=DifficultyLevel.MEDIUM)
-    dietary_tags = Column(ARRAY(Enum(DietaryTag, name="dietarytag")), default=[])
+    dietary_tags = Column(JSON, default=[])
     source_url = Column(String(2048))
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())

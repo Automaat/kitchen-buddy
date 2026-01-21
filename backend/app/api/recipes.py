@@ -78,12 +78,17 @@ def list_recipes(
         query = query.filter(Recipe.difficulty == difficulty)
     if tag_ids:
         query = query.filter(Recipe.tags.any(Tag.id.in_(tag_ids)))
-    if dietary_tags:
-        query = query.filter(Recipe.dietary_tags.contains(dietary_tags))
     if favorites_only:
         query = query.filter(Recipe.favorite.has())
 
     recipes = query.order_by(Recipe.created_at.desc()).offset(skip).limit(limit).all()
+
+    if dietary_tags:
+        requested_tags = {tag.value for tag in dietary_tags}
+        recipes = [
+            r for r in recipes
+            if r.dietary_tags and requested_tags.issubset(set(r.dietary_tags))
+        ]
 
     return [
         RecipeListResponse(
@@ -114,7 +119,7 @@ def create_recipe(recipe: RecipeCreate, db: Session = Depends(get_db)):
         cook_time_minutes=recipe.cook_time_minutes,
         servings=recipe.servings,
         difficulty=recipe.difficulty,
-        dietary_tags=recipe.dietary_tags,
+        dietary_tags=[tag.value for tag in recipe.dietary_tags],
         source_url=recipe.source_url,
     )
 
@@ -179,9 +184,11 @@ def update_recipe(recipe_id: int, recipe: RecipeUpdate, db: Session = Depends(ge
     if not db_recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
 
-    update_data = recipe.model_dump(exclude_unset=True, exclude={"ingredients", "tag_ids"})
+    update_data = recipe.model_dump(exclude_unset=True, exclude={"ingredients", "tag_ids", "dietary_tags"})
     for key, value in update_data.items():
         setattr(db_recipe, key, value)
+    if recipe.dietary_tags is not None:
+        db_recipe.dietary_tags = [tag.value for tag in recipe.dietary_tags]
 
     if recipe.ingredients is not None:
         db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe_id).delete()

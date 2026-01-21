@@ -31,6 +31,7 @@ def list_favorites(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
             cook_time_minutes=f.recipe.cook_time_minutes,
             servings=f.recipe.servings,
             difficulty=f.recipe.difficulty,
+            dietary_tags=f.recipe.dietary_tags or [],
             is_favorite=True,
             primary_image_id=next(
                 (img.id for img in f.recipe.images if img.is_primary),
