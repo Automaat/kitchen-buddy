@@ -3,6 +3,8 @@ from .ingredient import Ingredient
 from .meal_plan import MealPlan
 from .shopping_list import ShoppingList, ShoppingListItem
 from .favorite import Favorite
+from .collection import Collection, RecipeCollection
+from .recipe_note import RecipeNote
 
 __all__ = [
     "Recipe",
@@ -15,4 +17,7 @@ __all__ = [
     "ShoppingList",
     "ShoppingListItem",
     "Favorite",
+    "Collection",
+    "RecipeCollection",
+    "RecipeNote",
 ]

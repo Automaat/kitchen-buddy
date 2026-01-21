@@ -4,6 +4,7 @@
 	const navItems = [
 		{ href: '/', label: 'Dashboard', icon: '🏠' },
 		{ href: '/recipes', label: 'Recipes', icon: '📖' },
+		{ href: '/collections', label: 'Collections', icon: '📚' },
 		{ href: '/meal-planner', label: 'Meal Planner', icon: '📅' },
 		{ href: '/shopping-lists', label: 'Shopping Lists', icon: '🛒' },
 		{ href: '/ingredients', label: 'Ingredients', icon: '🥕' },

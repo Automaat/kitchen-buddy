@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session, joinedload
 
-from app.core import DifficultyLevel, get_db
-from app.models import Ingredient, Recipe, RecipeImage, RecipeIngredient, Tag
+from app.core import DietaryTag, DifficultyLevel, get_db
+from app.models import Ingredient, Recipe, RecipeImage, RecipeIngredient, RecipeNote, Tag
 from app.schemas import (
     RecipeCreate,
     RecipeListResponse,
@@ -10,9 +10,14 @@ from app.schemas import (
     RecipeUpdate,
     RecipeImageResponse,
     RecipeIngredientResponse,
+    RecipeNoteResponse,
     ScaledIngredientResponse,
+    RecipeImportRequest,
+    RecipeImportResponse,
+    RecipeNoteCreate,
+    RecipeNoteSchemaResponse,
 )
-from app.utils import scale_quantity
+from app.utils import scale_quantity, import_recipe_from_url
 
 router = APIRouter()
 
@@ -27,6 +32,8 @@ def get_recipe_response(recipe: Recipe) -> dict:
         "cook_time_minutes": recipe.cook_time_minutes,
         "servings": recipe.servings,
         "difficulty": recipe.difficulty,
+        "dietary_tags": recipe.dietary_tags or [],
+        "source_url": recipe.source_url,
         "is_active": recipe.is_active,
         "is_favorite": recipe.favorite is not None,
         "ingredients": [
@@ -42,6 +49,7 @@ def get_recipe_response(recipe: Recipe) -> dict:
         ],
         "images": [RecipeImageResponse.model_validate(img) for img in recipe.images],
         "tags": recipe.tags,
+        "notes": [RecipeNoteResponse.model_validate(n) for n in recipe.notes],
         "created_at": recipe.created_at,
         "updated_at": recipe.updated_at,
     }
@@ -54,6 +62,7 @@ def list_recipes(
     search: str | None = None,
     difficulty: DifficultyLevel | None = None,
     tag_ids: list[int] = Query(default=[]),
+    dietary_tags: list[DietaryTag] = Query(default=[]),
     favorites_only: bool = False,
     db: Session = Depends(get_db),
 ):
@@ -69,6 +78,8 @@ def list_recipes(
         query = query.filter(Recipe.difficulty == difficulty)
     if tag_ids:
         query = query.filter(Recipe.tags.any(Tag.id.in_(tag_ids)))
+    if dietary_tags:
+        query = query.filter(Recipe.dietary_tags.contains(dietary_tags))
     if favorites_only:
         query = query.filter(Recipe.favorite.has())
 
@@ -83,6 +94,7 @@ def list_recipes(
             cook_time_minutes=r.cook_time_minutes,
             servings=r.servings,
             difficulty=r.difficulty,
+            dietary_tags=r.dietary_tags or [],
             is_favorite=r.favorite is not None,
             primary_image_id=next((img.id for img in r.images if img.is_primary), r.images[0].id if r.images else None),
             tags=r.tags,
@@ -102,6 +114,8 @@ def create_recipe(recipe: RecipeCreate, db: Session = Depends(get_db)):
         cook_time_minutes=recipe.cook_time_minutes,
         servings=recipe.servings,
         difficulty=recipe.difficulty,
+        dietary_tags=recipe.dietary_tags,
+        source_url=recipe.source_url,
     )
 
     for ri in recipe.ingredients:
@@ -137,6 +151,7 @@ def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
             joinedload(Recipe.images),
             joinedload(Recipe.tags),
             joinedload(Recipe.favorite),
+            joinedload(Recipe.notes),
         )
         .filter(Recipe.id == recipe_id)
         .first()
@@ -156,6 +171,7 @@ def update_recipe(recipe_id: int, recipe: RecipeUpdate, db: Session = Depends(ge
             joinedload(Recipe.images),
             joinedload(Recipe.tags),
             joinedload(Recipe.favorite),
+            joinedload(Recipe.notes),
         )
         .filter(Recipe.id == recipe_id)
         .first()
@@ -264,3 +280,57 @@ def scale_recipe(recipe_id: int, servings: int, db: Session = Depends(get_db)):
         )
         for ri in recipe.ingredients
     ]
+
+
+@router.post("/import", response_model=RecipeImportResponse)
+async def import_recipe(request: RecipeImportRequest):
+    try:
+        data = await import_recipe_from_url(request.url)
+        return RecipeImportResponse(**data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to import recipe: {str(e)}")
+
+
+@router.post("/{recipe_id}/notes", response_model=RecipeNoteSchemaResponse, status_code=201)
+def add_recipe_note(recipe_id: int, note: RecipeNoteCreate, db: Session = Depends(get_db)):
+    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    db_note = RecipeNote(recipe_id=recipe_id, content=note.content)
+    db.add(db_note)
+    db.commit()
+    db.refresh(db_note)
+    return db_note
+
+
+@router.put("/{recipe_id}/notes/{note_id}", response_model=RecipeNoteSchemaResponse)
+def update_recipe_note(
+    recipe_id: int, note_id: int, note: RecipeNoteCreate, db: Session = Depends(get_db)
+):
+    db_note = (
+        db.query(RecipeNote)
+        .filter(RecipeNote.id == note_id, RecipeNote.recipe_id == recipe_id)
+        .first()
+    )
+    if not db_note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    db_note.content = note.content
+    db.commit()
+    db.refresh(db_note)
+    return db_note
+
+
+@router.delete("/{recipe_id}/notes/{note_id}", status_code=204)
+def delete_recipe_note(recipe_id: int, note_id: int, db: Session = Depends(get_db)):
+    db_note = (
+        db.query(RecipeNote)
+        .filter(RecipeNote.id == note_id, RecipeNote.recipe_id == recipe_id)
+        .first()
+    )
+    if not db_note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    db.delete(db_note)
+    db.commit()

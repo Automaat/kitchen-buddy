@@ -26,3 +26,14 @@ class IngredientCategory(str, Enum):
     CONDIMENTS = "condiments"
     SPICES = "spices"
     OTHER = "other"
+
+
+class DietaryTag(str, Enum):
+    VEGETARIAN = "vegetarian"
+    VEGAN = "vegan"
+    GLUTEN_FREE = "gluten_free"
+    DAIRY_FREE = "dairy_free"
+    NUT_FREE = "nut_free"
+    LOW_CARB = "low_carb"
+    KETO = "keto"
+    PALEO = "paleo"

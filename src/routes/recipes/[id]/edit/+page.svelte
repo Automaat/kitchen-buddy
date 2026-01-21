@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Recipe, Ingredient, Tag, DifficultyLevel } from '$lib/types';
+	import type { Recipe, Ingredient, Tag, DifficultyLevel, DietaryTag } from '$lib/types';
 	import { api, uploadImage } from '$lib/utils';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -20,6 +20,8 @@
 	let servings = $state(4);
 	let difficulty = $state<DifficultyLevel>('medium');
 	let selectedTagIds = $state<number[]>([]);
+	let selectedDietaryTags = $state<DietaryTag[]>([]);
+	let sourceUrl = $state('');
 
 	let recipeIngredients = $state<
 		Array<{
@@ -31,6 +33,28 @@
 	>([]);
 
 	let imageFile: File | null = $state(null);
+
+	const allDietaryTags: DietaryTag[] = [
+		'vegetarian',
+		'vegan',
+		'gluten_free',
+		'dairy_free',
+		'nut_free',
+		'low_carb',
+		'keto',
+		'paleo'
+	];
+
+	const dietaryTagLabels: Record<DietaryTag, string> = {
+		vegetarian: 'Vegetarian',
+		vegan: 'Vegan',
+		gluten_free: 'Gluten-Free',
+		dairy_free: 'Dairy-Free',
+		nut_free: 'Nut-Free',
+		low_carb: 'Low-Carb',
+		keto: 'Keto',
+		paleo: 'Paleo'
+	};
 
 	onMount(async () => {
 		try {
@@ -48,6 +72,8 @@
 			servings = recipe.servings;
 			difficulty = recipe.difficulty;
 			selectedTagIds = recipe.tags.map((t) => t.id);
+			selectedDietaryTags = recipe.dietary_tags || [];
+			sourceUrl = recipe.source_url || '';
 			recipeIngredients = recipe.ingredients.map((ri) => ({
 				ingredient_id: ri.ingredient_id,
 				quantity: ri.quantity || '',
@@ -74,6 +100,14 @@
 		recipeIngredients = recipeIngredients.filter((_, i) => i !== index);
 	}
 
+	function toggleDietaryTag(tag: DietaryTag) {
+		if (selectedDietaryTags.includes(tag)) {
+			selectedDietaryTags = selectedDietaryTags.filter((t) => t !== tag);
+		} else {
+			selectedDietaryTags = [...selectedDietaryTags, tag];
+		}
+	}
+
 	async function handleSubmit() {
 		if (!title.trim() || !recipe) {
 			error = 'Title is required';
@@ -92,6 +126,8 @@
 				cook_time_minutes: cookTime,
 				servings,
 				difficulty,
+				dietary_tags: selectedDietaryTags,
+				source_url: sourceUrl || null,
 				tag_ids: selectedTagIds,
 				ingredients: recipeIngredients.filter((ri) => ri.ingredient_id)
 			});
@@ -212,6 +248,19 @@
 				</div>
 
 				<div>
+					<label for="sourceUrl" class="block text-sm font-medium text-gray-700 mb-1">
+						Source URL
+					</label>
+					<input
+						id="sourceUrl"
+						type="url"
+						bind:value={sourceUrl}
+						placeholder="https://example.com/recipe"
+						class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					/>
+				</div>
+
+				<div>
 					<label for="image" class="block text-sm font-medium text-gray-700 mb-1">
 						Add Image
 					</label>
@@ -225,6 +274,23 @@
 						}}
 						class="w-full px-4 py-2 border rounded-lg"
 					/>
+				</div>
+
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-2">Dietary Tags</label>
+					<div class="flex flex-wrap gap-2">
+						{#each allDietaryTags as tag}
+							<button
+								type="button"
+								class="px-3 py-1 rounded-full text-sm {selectedDietaryTags.includes(tag)
+									? 'bg-green-600 text-white'
+									: 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+								onclick={() => toggleDietaryTag(tag)}
+							>
+								{dietaryTagLabels[tag]}
+							</button>
+						{/each}
+					</div>
 				</div>
 
 				{#if tags.length > 0}

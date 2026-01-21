@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    ARRAY,
     Boolean,
     Column,
     DateTime,
@@ -12,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from app.core import Base, DifficultyLevel
+from app.core import Base, DietaryTag, DifficultyLevel
 
 
 class Tag(Base):
@@ -36,6 +37,8 @@ class Recipe(Base):
     cook_time_minutes = Column(Integer)
     servings = Column(Integer, default=4)
     difficulty = Column(Enum(DifficultyLevel), default=DifficultyLevel.MEDIUM)
+    dietary_tags = Column(ARRAY(Enum(DietaryTag, name="dietarytag")), default=[])
+    source_url = Column(String(2048))
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -50,6 +53,12 @@ class Recipe(Base):
     meal_plans = relationship("MealPlan", back_populates="recipe")
     favorite = relationship(
         "Favorite", back_populates="recipe", uselist=False, cascade="all, delete-orphan"
+    )
+    collections = relationship(
+        "Collection", secondary="recipe_collections", back_populates="recipes"
+    )
+    notes = relationship(
+        "RecipeNote", back_populates="recipe", cascade="all, delete-orphan"
     )
 
 
