@@ -1,0 +1,8 @@
+[tools]
+python = "3.12"
+node = "22"
+uv = "latest"
+
+[env]
+VIRTUAL_ENV = "{{config_root}}/.venv"
+PATH = "{{config_root}}/.venv/bin:{{env.PATH}}"
