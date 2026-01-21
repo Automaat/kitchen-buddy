@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+import datetime
 
 from pydantic import BaseModel
 
@@ -31,7 +31,7 @@ class RecipeImageResponse(BaseModel):
     id: int
     is_primary: bool
     sort_order: int
-    created_at: datetime
+    created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
@@ -75,7 +75,7 @@ class RecipeListResponse(BaseModel):
     is_favorite: bool
     primary_image_id: int | None
     tags: list[TagResponse]
-    created_at: datetime
+    created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
@@ -87,8 +87,8 @@ class RecipeResponse(RecipeBase):
     ingredients: list[RecipeIngredientResponse]
     images: list[RecipeImageResponse]
     tags: list[TagResponse]
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     model_config = {"from_attributes": True}
 
