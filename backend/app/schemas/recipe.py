@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import datetime
+from urllib.parse import urlparse
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.core import DietaryTag, DifficultyLevel
 
@@ -56,6 +57,16 @@ class RecipeBase(BaseModel):
     dietary_tags: list[DietaryTag] = []
     source_url: str | None = None
 
+    @field_validator("source_url")
+    @classmethod
+    def validate_source_url(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        parsed = urlparse(v)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError("source_url must use http or https scheme")
+        return v
+
 
 class RecipeCreate(RecipeBase):
     ingredients: list[RecipeIngredientCreate] = []
@@ -75,6 +86,16 @@ class RecipeUpdate(BaseModel):
     is_active: bool | None = None
     ingredients: list[RecipeIngredientCreate] | None = None
     tag_ids: list[int] | None = None
+
+    @field_validator("source_url")
+    @classmethod
+    def validate_source_url(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        parsed = urlparse(v)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError("source_url must use http or https scheme")
+        return v
 
 
 class RecipeListResponse(BaseModel):

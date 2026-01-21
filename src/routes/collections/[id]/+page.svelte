@@ -41,8 +41,8 @@
 		try {
 			allRecipes = await api.get<RecipeListItem[]>('/recipes');
 			showAddModal = true;
-		} catch {
-			/* ignore */
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to load recipes';
 		}
 	}
 

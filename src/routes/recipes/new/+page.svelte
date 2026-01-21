@@ -3,6 +3,7 @@
 	import { api, uploadImage } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { allDietaryTags, dietaryTagLabels } from '$lib/constants/dietary-tags';
 
 	let ingredients: Ingredient[] = $state([]);
 	let tags: Tag[] = $state([]);
@@ -30,28 +31,6 @@
 	>([]);
 
 	let imageFile: File | null = $state(null);
-
-	const allDietaryTags: DietaryTag[] = [
-		'vegetarian',
-		'vegan',
-		'gluten_free',
-		'dairy_free',
-		'nut_free',
-		'low_carb',
-		'keto',
-		'paleo'
-	];
-
-	const dietaryTagLabels: Record<DietaryTag, string> = {
-		vegetarian: 'Vegetarian',
-		vegan: 'Vegan',
-		gluten_free: 'Gluten-Free',
-		dairy_free: 'Dairy-Free',
-		nut_free: 'Nut-Free',
-		low_carb: 'Low-Carb',
-		keto: 'Keto',
-		paleo: 'Paleo'
-	};
 
 	onMount(async () => {
 		try {

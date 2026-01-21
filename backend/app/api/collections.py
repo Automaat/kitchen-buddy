@@ -34,7 +34,7 @@ def list_collections(db: Session = Depends(get_db)):
             id=c.id,
             name=c.name,
             description=c.description,
-            recipe_count=len(c.recipes),
+            recipe_count=len([r for r in c.recipes if r.is_active]),
             created_at=c.created_at,
             updated_at=c.updated_at,
         )
@@ -69,19 +69,19 @@ def get_collection(collection_id: int, db: Session = Depends(get_db)):
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
+    active_recipes = [r for r in collection.recipes if r.is_active]
     return CollectionDetailResponse(
         id=collection.id,
         name=collection.name,
         description=collection.description,
-        recipe_count=len(collection.recipes),
+        recipe_count=len(active_recipes),
         recipes=[
             CollectionRecipeSummary(
                 id=r.id,
                 title=r.title,
                 primary_image_id=get_primary_image_id(r),
             )
-            for r in collection.recipes
-            if r.is_active
+            for r in active_recipes
         ],
         created_at=collection.created_at,
         updated_at=collection.updated_at,
@@ -112,7 +112,7 @@ def update_collection(
         id=db_collection.id,
         name=db_collection.name,
         description=db_collection.description,
-        recipe_count=len(db_collection.recipes),
+        recipe_count=len([r for r in db_collection.recipes if r.is_active]),
         created_at=db_collection.created_at,
         updated_at=db_collection.updated_at,
     )

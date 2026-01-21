@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session, joinedload
 
@@ -18,6 +20,8 @@ from app.schemas import (
     RecipeNoteSchemaResponse,
 )
 from app.utils import scale_quantity, import_recipe_from_url
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -294,8 +298,11 @@ async def import_recipe(request: RecipeImportRequest):
     try:
         data = await import_recipe_from_url(request.url)
         return RecipeImportResponse(**data)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to import recipe: {str(e)}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Failed to import recipe from %s", request.url)
+        raise HTTPException(status_code=400, detail="Failed to import recipe from URL")
 
 
 @router.post("/{recipe_id}/notes", response_model=RecipeNoteSchemaResponse, status_code=201)

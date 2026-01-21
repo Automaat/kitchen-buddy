@@ -2,6 +2,7 @@
 	import type { RecipeListItem, Tag, DifficultyLevel, DietaryTag } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { onMount } from 'svelte';
+	import { allDietaryTags, dietaryTagLabels } from '$lib/constants/dietary-tags';
 
 	let recipes: RecipeListItem[] = $state([]);
 	let tags: Tag[] = $state([]);
@@ -13,28 +14,6 @@
 	let selectedTagIds = $state<number[]>([]);
 	let selectedDietaryTags = $state<DietaryTag[]>([]);
 	let favoritesOnly = $state(false);
-
-	const allDietaryTags: DietaryTag[] = [
-		'vegetarian',
-		'vegan',
-		'gluten_free',
-		'dairy_free',
-		'nut_free',
-		'low_carb',
-		'keto',
-		'paleo'
-	];
-
-	const dietaryTagLabels: Record<DietaryTag, string> = {
-		vegetarian: 'Vegetarian',
-		vegan: 'Vegan',
-		gluten_free: 'Gluten-Free',
-		dairy_free: 'Dairy-Free',
-		nut_free: 'Nut-Free',
-		low_carb: 'Low-Carb',
-		keto: 'Keto',
-		paleo: 'Paleo'
-	};
 
 	async function loadRecipes() {
 		loading = true;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Recipe, ScaledIngredient, CookingTimer, DietaryTag } from '$lib/types';
+	import type { Recipe, ScaledIngredient, CookingTimer } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -15,6 +15,7 @@
 		formatTime,
 		requestNotificationPermission
 	} from '$lib/stores/timers';
+	import { dietaryTagLabels, dietaryTagColors } from '$lib/constants/dietary-tags';
 
 	let recipe: Recipe | null = $state(null);
 	let scaledIngredients: ScaledIngredient[] | null = $state(null);
@@ -29,28 +30,6 @@
 	let editingNoteContent = $state('');
 
 	const timers = $derived(getTimers());
-
-	const dietaryTagLabels: Record<DietaryTag, string> = {
-		vegetarian: 'Vegetarian',
-		vegan: 'Vegan',
-		gluten_free: 'Gluten-Free',
-		dairy_free: 'Dairy-Free',
-		nut_free: 'Nut-Free',
-		low_carb: 'Low-Carb',
-		keto: 'Keto',
-		paleo: 'Paleo'
-	};
-
-	const dietaryTagColors: Record<DietaryTag, string> = {
-		vegetarian: 'bg-green-100 text-green-800',
-		vegan: 'bg-emerald-100 text-emerald-800',
-		gluten_free: 'bg-amber-100 text-amber-800',
-		dairy_free: 'bg-blue-100 text-blue-800',
-		nut_free: 'bg-orange-100 text-orange-800',
-		low_carb: 'bg-purple-100 text-purple-800',
-		keto: 'bg-pink-100 text-pink-800',
-		paleo: 'bg-teal-100 text-teal-800'
-	};
 
 	$effect(() => {
 		if (recipe) {
@@ -126,8 +105,8 @@
 			);
 			recipe.notes = [...recipe.notes, note];
 			newNoteContent = '';
-		} catch {
-			/* ignore */
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to add note';
 		}
 	}
 
@@ -141,8 +120,8 @@
 			recipe.notes = recipe.notes.map((n) => (n.id === editingNoteId ? note : n));
 			editingNoteId = null;
 			editingNoteContent = '';
-		} catch {
-			/* ignore */
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to update note';
 		}
 	}
 
@@ -151,8 +130,8 @@
 		try {
 			await api.delete(`/recipes/${recipe.id}/notes/${noteId}`);
 			recipe.notes = recipe.notes.filter((n) => n.id !== noteId);
-		} catch {
-			/* ignore */
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to delete note';
 		}
 	}
 

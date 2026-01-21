@@ -4,7 +4,7 @@ let timers = $state<CookingTimer[]>([]);
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
 function generateId(): string {
-	return Math.random().toString(36).substring(2, 9);
+	return crypto.randomUUID();
 }
 
 function startTicking() {

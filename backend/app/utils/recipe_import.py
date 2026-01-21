@@ -1,19 +1,49 @@
+import ipaddress
+import logging
 import re
 from typing import Any
+from urllib.parse import urlparse
 
 import extruct
 import httpx
 from bs4 import BeautifulSoup
 
+logger = logging.getLogger(__name__)
+
+BLOCKED_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254"}
+
+
+def is_private_ip(host: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(host)
+        return ip.is_private or ip.is_loopback or ip.is_link_local
+    except ValueError:
+        return False
+
+
+def validate_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("Only http and https URLs are allowed")
+    host = parsed.hostname or ""
+    if host.lower() in BLOCKED_HOSTS:
+        raise ValueError("URL host is not allowed")
+    if is_private_ip(host):
+        raise ValueError("Private IP addresses are not allowed")
+
 
 def parse_duration(duration: str | None) -> int | None:
     if not duration:
         return None
-    match = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?", duration)
+    match = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$", duration)
     if match:
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)
-        return hours * 60 + minutes
+        seconds = int(match.group(3) or 0)
+        total_minutes = hours * 60 + minutes
+        if seconds > 0:
+            total_minutes += 1
+        return total_minutes
     return None
 
 
@@ -86,7 +116,8 @@ def extract_recipe_from_microdata(data: list[dict]) -> dict | None:
 
 
 async def import_recipe_from_url(url: str) -> dict:
-    async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+    validate_url(url)
+    async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
         headers = {
             "User-Agent": "Mozilla/5.0 (compatible; KitchenBuddy/1.0)",
             "Accept": "text/html,application/xhtml+xml",

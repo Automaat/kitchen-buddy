@@ -13,7 +13,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from app.core import Base, DietaryTag, DifficultyLevel
+from app.core import Base, DifficultyLevel
 
 
 class Tag(Base):
