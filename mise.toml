@@ -6,3 +6,11 @@ uv = "latest"
 [env]
 VIRTUAL_ENV = "{{config_root}}/.venv"
 PATH = "{{config_root}}/.venv/bin:{{env.PATH}}"
+
+[tasks.dev]
+description = "Start all services for development"
+run = "docker-compose up --build"
+
+[tasks.down]
+description = "Stop all services"
+run = "docker-compose down"
