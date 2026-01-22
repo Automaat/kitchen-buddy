@@ -3,14 +3,14 @@ from __future__ import annotations
 import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.core import IngredientCategory
 
 
 class PantryItemBase(BaseModel):
     ingredient_id: int
-    quantity: Decimal = Field(gt=0)
+    quantity: Decimal
     unit: str | None = None
     expiration_date: datetime.date | None = None
     notes: str | None = None

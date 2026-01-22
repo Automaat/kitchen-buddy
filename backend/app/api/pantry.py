@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -103,7 +101,7 @@ def add_ingredient_to_pantry(
         .first()
     )
     if existing:
-        existing.quantity = existing.quantity + Decimal(str(quantity))
+        existing.quantity = existing.quantity + quantity
         db.commit()
         db.refresh(existing)
         return get_pantry_item_response(existing)
