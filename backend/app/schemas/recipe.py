@@ -152,3 +152,17 @@ class RecipeImportResponse(BaseModel):
     ingredients: list[str] = []
     image_url: str | None = None
     source_url: str
+
+
+class RecipeNutritionResponse(BaseModel):
+    calories: float | None = None
+    protein: float | None = None
+    carbs: float | None = None
+    fat: float | None = None
+    fiber: float | None = None
+
+
+class RecipeCostResponse(BaseModel):
+    total_cost: float | None = None
+    cost_per_serving: float | None = None
+    ingredient_costs: list[dict] = []

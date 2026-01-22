@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Recipe, ScaledIngredient, CookingTimer } from '$lib/types';
+	import type { Recipe, ScaledIngredient, CookingTimer, RecipeNutrition, RecipeCost } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -19,6 +19,8 @@
 
 	let recipe: Recipe | null = $state(null);
 	let scaledIngredients: ScaledIngredient[] | null = $state(null);
+	let nutrition: RecipeNutrition | null = $state(null);
+	let cost: RecipeCost | null = $state(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let targetServings = $state(4);
@@ -41,6 +43,7 @@
 		requestNotificationPermission();
 		try {
 			recipe = await api.get<Recipe>(`/recipes/${$page.params.id}`);
+			loadNutritionAndCost();
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to load recipe';
 		} finally {
@@ -48,12 +51,27 @@
 		}
 	});
 
+	async function loadNutritionAndCost() {
+		if (!recipe) return;
+		try {
+			const [nutritionData, costData] = await Promise.all([
+				api.get<RecipeNutrition>(`/recipes/${recipe.id}/nutrition?servings=${targetServings}`),
+				api.get<RecipeCost>(`/recipes/${recipe.id}/cost?servings=${targetServings}`)
+			]);
+			nutrition = nutritionData;
+			cost = costData;
+		} catch {
+			/* ignore - nutrition/cost data is optional */
+		}
+	}
+
 	async function scaleRecipe() {
 		if (!recipe) return;
 		try {
 			scaledIngredients = await api.get<ScaledIngredient[]>(
 				`/recipes/${recipe.id}/scale/${targetServings}`
 			);
+			loadNutritionAndCost();
 		} catch {
 			/* ignore */
 		}
@@ -292,6 +310,85 @@
 				{/if}
 			</div>
 		</div>
+
+		{#if nutrition && (nutrition.calories || nutrition.protein || nutrition.carbs || nutrition.fat)}
+			<div class="bg-white p-6 rounded-lg shadow-sm border">
+				<h2 class="text-lg font-semibold mb-4">
+					Nutrition Info
+					<span class="text-sm font-normal text-gray-500">(for {targetServings} servings)</span>
+				</h2>
+				<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+					{#if nutrition.calories}
+						<div class="text-center p-3 bg-orange-50 rounded-lg">
+							<div class="text-2xl font-bold text-orange-600">{nutrition.calories}</div>
+							<div class="text-sm text-gray-600">Calories</div>
+						</div>
+					{/if}
+					{#if nutrition.protein}
+						<div class="text-center p-3 bg-red-50 rounded-lg">
+							<div class="text-2xl font-bold text-red-600">{nutrition.protein}g</div>
+							<div class="text-sm text-gray-600">Protein</div>
+						</div>
+					{/if}
+					{#if nutrition.carbs}
+						<div class="text-center p-3 bg-blue-50 rounded-lg">
+							<div class="text-2xl font-bold text-blue-600">{nutrition.carbs}g</div>
+							<div class="text-sm text-gray-600">Carbs</div>
+						</div>
+					{/if}
+					{#if nutrition.fat}
+						<div class="text-center p-3 bg-yellow-50 rounded-lg">
+							<div class="text-2xl font-bold text-yellow-600">{nutrition.fat}g</div>
+							<div class="text-sm text-gray-600">Fat</div>
+						</div>
+					{/if}
+					{#if nutrition.fiber}
+						<div class="text-center p-3 bg-green-50 rounded-lg">
+							<div class="text-2xl font-bold text-green-600">{nutrition.fiber}g</div>
+							<div class="text-sm text-gray-600">Fiber</div>
+						</div>
+					{/if}
+				</div>
+			</div>
+		{/if}
+
+		{#if cost && cost.total_cost}
+			<div class="bg-white p-6 rounded-lg shadow-sm border">
+				<h2 class="text-lg font-semibold mb-4">
+					Cost Estimate
+					<span class="text-sm font-normal text-gray-500">(for {targetServings} servings)</span>
+				</h2>
+				<div class="grid md:grid-cols-2 gap-6">
+					<div>
+						<div class="flex justify-between items-center mb-2">
+							<span class="text-gray-600">Total Cost:</span>
+							<span class="text-2xl font-bold text-green-600">${cost.total_cost.toFixed(2)}</span>
+						</div>
+						{#if cost.cost_per_serving}
+							<div class="flex justify-between items-center">
+								<span class="text-gray-600">Per Serving:</span>
+								<span class="text-lg font-semibold text-gray-900">
+									${cost.cost_per_serving.toFixed(2)}
+								</span>
+							</div>
+						{/if}
+					</div>
+					<div>
+						<h3 class="text-sm font-medium text-gray-700 mb-2">Ingredient Breakdown</h3>
+						<div class="space-y-1 max-h-32 overflow-y-auto">
+							{#each cost.ingredient_costs as item}
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600">{item.ingredient_name}</span>
+									<span class="font-medium">
+										{item.cost ? `$${item.cost.toFixed(2)}` : '-'}
+									</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<div class="bg-white p-6 rounded-lg shadow-sm border">
 			<h2 class="text-lg font-semibold mb-4">Cooking Timers</h2>

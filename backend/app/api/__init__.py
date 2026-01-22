@@ -9,6 +9,8 @@ from .favorites import router as favorites_router
 from .dashboard import router as dashboard_router
 from .images import router as images_router
 from .collections import router as collections_router
+from .pantry import router as pantry_router
+from .suggestions import router as suggestions_router
 
 api_router = APIRouter()
 api_router.include_router(ingredients_router, prefix="/ingredients", tags=["ingredients"])
@@ -20,3 +22,5 @@ api_router.include_router(favorites_router, prefix="/favorites", tags=["favorite
 api_router.include_router(dashboard_router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(images_router, prefix="/images", tags=["images"])
 api_router.include_router(collections_router, prefix="/collections", tags=["collections"])
+api_router.include_router(pantry_router, prefix="/pantry", tags=["pantry"])
+api_router.include_router(suggestions_router, prefix="/suggestions", tags=["suggestions"])

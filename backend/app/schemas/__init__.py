@@ -1,4 +1,4 @@
-from .ingredient import IngredientCreate, IngredientUpdate, IngredientResponse
+from .ingredient import IngredientCreate, IngredientUpdate, IngredientResponse, NutritionInfo
 from .recipe import (
     RecipeCreate,
     RecipeUpdate,
@@ -11,6 +11,8 @@ from .recipe import (
     ScaledIngredientResponse,
     RecipeImportRequest,
     RecipeImportResponse,
+    RecipeNutritionResponse,
+    RecipeCostResponse,
 )
 from .tag import TagCreate, TagResponse
 from .meal_plan import MealPlanCreate, MealPlanUpdate, MealPlanResponse, WeekMealPlanResponse
@@ -31,11 +33,23 @@ from .collection import (
     CollectionRecipeSummary,
 )
 from .recipe_note import RecipeNoteCreate, RecipeNoteUpdate, RecipeNoteResponse as RecipeNoteSchemaResponse
+from .pantry import (
+    PantryItemCreate,
+    PantryItemUpdate,
+    PantryItemResponse,
+    PantryIngredientSummary,
+)
+from .suggestions import (
+    MissingIngredient,
+    RecipeSuggestion,
+    SuggestionsResponse,
+)
 
 __all__ = [
     "IngredientCreate",
     "IngredientUpdate",
     "IngredientResponse",
+    "NutritionInfo",
     "RecipeCreate",
     "RecipeUpdate",
     "RecipeResponse",
@@ -47,6 +61,8 @@ __all__ = [
     "ScaledIngredientResponse",
     "RecipeImportRequest",
     "RecipeImportResponse",
+    "RecipeNutritionResponse",
+    "RecipeCostResponse",
     "TagCreate",
     "TagResponse",
     "MealPlanCreate",
@@ -68,4 +84,11 @@ __all__ = [
     "RecipeNoteCreate",
     "RecipeNoteUpdate",
     "RecipeNoteSchemaResponse",
+    "PantryItemCreate",
+    "PantryItemUpdate",
+    "PantryItemResponse",
+    "PantryIngredientSummary",
+    "MissingIngredient",
+    "RecipeSuggestion",
+    "SuggestionsResponse",
 ]
