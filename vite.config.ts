@@ -1,12 +1,14 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+
 export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		proxy: {
 			'/api': {
-				target: 'http://localhost:8000',
+				target: backendUrl,
 				changeOrigin: true
 			}
 		}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Card, CardContent, Modal } from '@mskalski/home-ui';
 	import type { CollectionDetail, RecipeListItem } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { page } from '$app/stores';
@@ -80,124 +81,306 @@
 </script>
 
 {#if loading}
-	<div class="text-center py-12">Loading...</div>
+	<div class="loading">Loading...</div>
 {:else if error}
-	<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
+	<div class="error-message">{error}</div>
 {:else if collection}
-	<div class="space-y-6">
-		<div class="flex items-start justify-between">
+	<div class="page">
+		<div class="page-header">
 			<div>
-				<h1 class="text-3xl font-bold text-gray-900">{collection.name}</h1>
+				<h1>{collection.name}</h1>
 				{#if collection.description}
-					<p class="text-gray-600 mt-2">{collection.description}</p>
+					<p class="description">{collection.description}</p>
 				{/if}
-				<p class="text-gray-500 text-sm mt-1">
+				<p class="count">
 					{collection.recipe_count} recipe{collection.recipe_count !== 1 ? 's' : ''}
 				</p>
 			</div>
-			<div class="flex gap-2">
-				<button
-					onclick={openAddModal}
-					class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-				>
-					Add Recipe
-				</button>
-				<button
-					onclick={deleteCollection}
-					class="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
-				>
-					Delete
-				</button>
+			<div class="header-actions">
+				<button onclick={openAddModal} class="btn btn-primary">Add Recipe</button>
+				<button onclick={deleteCollection} class="btn btn-danger">Delete</button>
 			</div>
 		</div>
 
 		{#if collection.recipes.length === 0}
-			<div class="text-center py-12 text-gray-500">
+			<div class="empty-state">
 				No recipes in this collection yet. Add some recipes to get started!
 			</div>
 		{:else}
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			<div class="recipe-grid">
 				{#each collection.recipes as recipe}
-					<div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-						<a href="/recipes/{recipe.id}">
+					<Card>
+						<a href="/recipes/{recipe.id}" class="recipe-image-link">
 							{#if recipe.primary_image_id}
 								<img
 									src={getImageUrl(recipe.primary_image_id)}
 									alt={recipe.title}
-									class="w-full h-48 object-cover"
+									class="recipe-image"
 								/>
 							{:else}
-								<div
-									class="w-full h-48 bg-gray-100 flex items-center justify-center text-4xl"
-								>
-									🍽️
-								</div>
+								<div class="recipe-image-placeholder">🍽️</div>
 							{/if}
 						</a>
-						<div class="p-4">
-							<a href="/recipes/{recipe.id}" class="font-semibold text-lg hover:text-blue-600">
-								{recipe.title}
-							</a>
-							<button
-								onclick={() => removeRecipe(recipe.id)}
-								class="float-right px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
-							>
-								Remove
-							</button>
-						</div>
-					</div>
+						<CardContent>
+							<div class="recipe-header">
+								<a href="/recipes/{recipe.id}" class="recipe-title">{recipe.title}</a>
+								<button onclick={() => removeRecipe(recipe.id)} class="remove-btn">Remove</button>
+							</div>
+						</CardContent>
+					</Card>
 				{/each}
 			</div>
 		{/if}
 	</div>
 {/if}
 
-{#if showAddModal}
-	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-		<div class="bg-white rounded-lg p-6 w-full max-w-lg max-h-[80vh] flex flex-col">
-			<h2 class="text-xl font-semibold mb-4">Add Recipe to Collection</h2>
-			<input
-				type="text"
-				bind:value={searchQuery}
-				placeholder="Search recipes..."
-				class="w-full px-4 py-2 border rounded-lg mb-4"
-			/>
-			<div class="flex-1 overflow-y-auto space-y-2">
-				{#if filteredRecipes.length === 0}
-					<p class="text-gray-500 text-center py-4">No recipes available to add.</p>
-				{:else}
-					{#each filteredRecipes as recipe}
-						<button
-							onclick={() => addRecipe(recipe.id)}
-							class="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 text-left"
-						>
-							{#if recipe.primary_image_id}
-								<img
-									src={getImageUrl(recipe.primary_image_id)}
-									alt={recipe.title}
-									class="w-12 h-12 object-cover rounded"
-								/>
-							{:else}
-								<div
-									class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xl"
-								>
-									🍽️
-								</div>
-							{/if}
-							<span class="font-medium">{recipe.title}</span>
-						</button>
-					{/each}
-				{/if}
-			</div>
-			<button
-				onclick={() => {
-					showAddModal = false;
-					searchQuery = '';
-				}}
-				class="mt-4 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-			>
-				Close
-			</button>
-		</div>
+<Modal
+	open={showAddModal}
+	title="Add Recipe to Collection"
+	onCancel={() => {
+		showAddModal = false;
+		searchQuery = '';
+	}}
+	showActions={false}
+>
+	<input
+		type="text"
+		bind:value={searchQuery}
+		placeholder="Search recipes..."
+		class="input search-input"
+	/>
+	<div class="recipe-list">
+		{#if filteredRecipes.length === 0}
+			<p class="no-recipes">No recipes available to add.</p>
+		{:else}
+			{#each filteredRecipes as recipe}
+				<button onclick={() => addRecipe(recipe.id)} class="recipe-item">
+					{#if recipe.primary_image_id}
+						<img
+							src={getImageUrl(recipe.primary_image_id)}
+							alt={recipe.title}
+							class="recipe-item-image"
+						/>
+					{:else}
+						<div class="recipe-item-placeholder">🍽️</div>
+					{/if}
+					<span class="recipe-item-title">{recipe.title}</span>
+				</button>
+			{/each}
+		{/if}
 	</div>
-{/if}
+</Modal>
+
+<style>
+	.page {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-6);
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+	}
+
+	.page-header h1 {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-8);
+		margin: 0;
+	}
+
+	.description {
+		color: var(--color-text-muted);
+		margin: var(--size-2) 0 0 0;
+	}
+
+	.count {
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+		margin: var(--size-1) 0 0 0;
+	}
+
+	.header-actions {
+		display: flex;
+		gap: var(--size-2);
+	}
+
+	.btn {
+		padding: var(--size-2) var(--size-4);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+		cursor: pointer;
+		text-decoration: none;
+		transition: all 0.2s;
+		border: none;
+	}
+
+	.btn-primary {
+		background: var(--color-primary);
+		color: var(--nord6);
+	}
+
+	.btn-primary:hover {
+		background: var(--nord9);
+	}
+
+	.btn-danger {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+	}
+
+	.btn-danger:hover {
+		background: rgba(191, 97, 106, 0.3);
+	}
+
+	.loading {
+		text-align: center;
+		padding: var(--size-8) 0;
+	}
+
+	.error-message {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: var(--size-8) 0;
+		color: var(--color-text-muted);
+	}
+
+	.recipe-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: var(--size-6);
+	}
+
+	.recipe-image-link {
+		display: block;
+	}
+
+	.recipe-image {
+		width: 100%;
+		height: 200px;
+		object-fit: cover;
+		border-radius: var(--radius-2) var(--radius-2) 0 0;
+	}
+
+	.recipe-image-placeholder {
+		width: 100%;
+		height: 200px;
+		background: var(--color-accent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: var(--font-size-6);
+		border-radius: var(--radius-2) var(--radius-2) 0 0;
+	}
+
+	.recipe-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.recipe-title {
+		font-size: var(--font-size-3);
+		font-weight: var(--font-weight-6);
+		color: var(--color-text);
+		text-decoration: none;
+	}
+
+	.recipe-title:hover {
+		color: var(--color-primary);
+	}
+
+	.remove-btn {
+		padding: var(--size-1) var(--size-2);
+		font-size: var(--font-size-0);
+		background: none;
+		border: none;
+		color: var(--color-error);
+		cursor: pointer;
+	}
+
+	.remove-btn:hover {
+		background: rgba(191, 97, 106, 0.1);
+		border-radius: var(--radius-2);
+	}
+
+	.input {
+		width: 100%;
+		padding: var(--size-2) var(--size-4);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+
+	.search-input {
+		margin-bottom: var(--size-4);
+	}
+
+	.recipe-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-2);
+		max-height: 400px;
+		overflow-y: auto;
+	}
+
+	.no-recipes {
+		text-align: center;
+		padding: var(--size-4);
+		color: var(--color-text-muted);
+	}
+
+	.recipe-item {
+		display: flex;
+		align-items: center;
+		gap: var(--size-3);
+		padding: var(--size-3);
+		background: var(--color-bg-muted);
+		border-radius: var(--radius-2);
+		border: none;
+		cursor: pointer;
+		text-align: left;
+		transition: background 0.2s;
+	}
+
+	.recipe-item:hover {
+		background: var(--color-accent);
+	}
+
+	.recipe-item-image {
+		width: 48px;
+		height: 48px;
+		object-fit: cover;
+		border-radius: var(--radius-2);
+	}
+
+	.recipe-item-placeholder {
+		width: 48px;
+		height: 48px;
+		background: var(--color-accent);
+		border-radius: var(--radius-2);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: var(--font-size-4);
+	}
+
+	.recipe-item-title {
+		font-weight: var(--font-weight-6);
+	}
+</style>

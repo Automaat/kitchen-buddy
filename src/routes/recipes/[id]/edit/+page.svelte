@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Card, CardHeader, CardTitle, CardContent } from '@mskalski/home-ui';
 	import type { Recipe, Ingredient, Tag, DifficultyLevel, DietaryTag } from '$lib/types';
 	import { api, uploadImage } from '$lib/utils';
 	import { page } from '$app/stores';
@@ -125,245 +126,362 @@
 </script>
 
 {#if loading}
-	<div class="text-center py-12">Loading...</div>
+	<div class="loading">Loading...</div>
 {:else if !recipe}
-	<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error || 'Recipe not found'}</div>
+	<div class="error-message">{error || 'Recipe not found'}</div>
 {:else}
-	<div class="max-w-3xl mx-auto space-y-6">
-		<h1 class="text-3xl font-bold text-gray-900">Edit Recipe</h1>
+	<div class="page">
+		<h1>Edit Recipe</h1>
 
 		{#if error}
-			<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
+			<div class="error-message">{error}</div>
 		{/if}
 
-		<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
-			<div class="bg-white p-6 rounded-lg shadow-sm border space-y-4">
-				<div>
-					<label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-					<input
-						id="title"
-						type="text"
-						bind:value={title}
-						required
-						class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-					/>
-				</div>
+		<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="form">
+			<Card>
+				<CardHeader>
+					<CardTitle>Basic Info</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div class="form-content">
+						<div class="form-group">
+							<label for="title">Title *</label>
+							<input id="title" type="text" bind:value={title} required class="input" />
+						</div>
 
-				<div>
-					<label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-						Description
-					</label>
-					<textarea
-						id="description"
-						bind:value={description}
-						rows="2"
-						class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-					></textarea>
-				</div>
+						<div class="form-group">
+							<label for="description">Description</label>
+							<textarea id="description" bind:value={description} rows="2" class="input"></textarea>
+						</div>
 
-				<div>
-					<label for="instructions" class="block text-sm font-medium text-gray-700 mb-1">
-						Instructions
-					</label>
-					<textarea
-						id="instructions"
-						bind:value={instructions}
-						rows="6"
-						class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-					></textarea>
-				</div>
+						<div class="form-group">
+							<label for="instructions">Instructions</label>
+							<textarea id="instructions" bind:value={instructions} rows="6" class="input"></textarea>
+						</div>
 
-				<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-					<div>
-						<label for="prepTime" class="block text-sm font-medium text-gray-700 mb-1">
-							Prep (min)
-						</label>
-						<input
-							id="prepTime"
-							type="number"
-							bind:value={prepTime}
-							min="0"
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
+						<div class="form-grid">
+							<div class="form-group">
+								<label for="prepTime">Prep (min)</label>
+								<input id="prepTime" type="number" bind:value={prepTime} min="0" class="input" />
+							</div>
+							<div class="form-group">
+								<label for="cookTime">Cook (min)</label>
+								<input id="cookTime" type="number" bind:value={cookTime} min="0" class="input" />
+							</div>
+							<div class="form-group">
+								<label for="servings">Servings</label>
+								<input id="servings" type="number" bind:value={servings} min="1" class="input" />
+							</div>
+							<div class="form-group">
+								<label for="difficulty">Difficulty</label>
+								<select id="difficulty" bind:value={difficulty} class="input">
+									<option value="easy">Easy</option>
+									<option value="medium">Medium</option>
+									<option value="hard">Hard</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="sourceUrl">Source URL</label>
+							<input id="sourceUrl" type="url" bind:value={sourceUrl} placeholder="https://example.com/recipe" class="input" />
+						</div>
+
+						<div class="form-group">
+							<label for="image">Add Image</label>
+							<input
+								id="image"
+								type="file"
+								accept="image/jpeg,image/png,image/webp"
+								onchange={(e) => {
+									const input = e.target as HTMLInputElement;
+									imageFile = input.files?.[0] || null;
+								}}
+								class="input"
+							/>
+						</div>
+
+						<div class="form-group">
+							<span class="label">Dietary Tags</span>
+							<div class="tag-selector">
+								{#each allDietaryTags as tag}
+									<button
+										type="button"
+										class="tag-btn"
+										class:selected={selectedDietaryTags.includes(tag)}
+										onclick={() => toggleDietaryTag(tag)}
+									>
+										{dietaryTagLabels[tag]}
+									</button>
+								{/each}
+							</div>
+						</div>
+
+						{#if tags.length > 0}
+							<div class="form-group">
+								<span class="label">Tags</span>
+								<div class="tag-selector">
+									{#each tags as tag}
+										<button
+											type="button"
+											class="tag-btn tag-custom"
+											class:selected={selectedTagIds.includes(tag.id)}
+											onclick={() => {
+												if (selectedTagIds.includes(tag.id)) {
+													selectedTagIds = selectedTagIds.filter((id) => id !== tag.id);
+												} else {
+													selectedTagIds = [...selectedTagIds, tag.id];
+												}
+											}}
+										>
+											{tag.name}
+										</button>
+									{/each}
+								</div>
+							</div>
+						{/if}
 					</div>
-					<div>
-						<label for="cookTime" class="block text-sm font-medium text-gray-700 mb-1">
-							Cook (min)
-						</label>
-						<input
-							id="cookTime"
-							type="number"
-							bind:value={cookTime}
-							min="0"
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
-					</div>
-					<div>
-						<label for="servings" class="block text-sm font-medium text-gray-700 mb-1">
-							Servings
-						</label>
-						<input
-							id="servings"
-							type="number"
-							bind:value={servings}
-							min="1"
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
-					</div>
-					<div>
-						<label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">
-							Difficulty
-						</label>
-						<select
-							id="difficulty"
-							bind:value={difficulty}
-							class="w-full px-4 py-2 border rounded-lg"
-						>
-							<option value="easy">Easy</option>
-							<option value="medium">Medium</option>
-							<option value="hard">Hard</option>
-						</select>
-					</div>
-				</div>
+				</CardContent>
+			</Card>
 
-				<div>
-					<label for="sourceUrl" class="block text-sm font-medium text-gray-700 mb-1">
-						Source URL
-					</label>
-					<input
-						id="sourceUrl"
-						type="url"
-						bind:value={sourceUrl}
-						placeholder="https://example.com/recipe"
-						class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-					/>
-				</div>
-
-				<div>
-					<label for="image" class="block text-sm font-medium text-gray-700 mb-1">
-						Add Image
-					</label>
-					<input
-						id="image"
-						type="file"
-						accept="image/jpeg,image/png,image/webp"
-						onchange={(e) => {
-							const input = e.target as HTMLInputElement;
-							imageFile = input.files?.[0] || null;
-						}}
-						class="w-full px-4 py-2 border rounded-lg"
-					/>
-				</div>
-
-				<div>
-					<label class="block text-sm font-medium text-gray-700 mb-2">Dietary Tags</label>
-					<div class="flex flex-wrap gap-2">
-						{#each allDietaryTags as tag}
-							<button
-								type="button"
-								class="px-3 py-1 rounded-full text-sm {selectedDietaryTags.includes(tag)
-									? 'bg-green-600 text-white'
-									: 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-								onclick={() => toggleDietaryTag(tag)}
-							>
-								{dietaryTagLabels[tag]}
-							</button>
+			<Card>
+				<CardHeader>
+					<div class="section-header">
+						<CardTitle>Ingredients</CardTitle>
+						<button type="button" onclick={addIngredient} disabled={ingredients.length === 0} class="btn btn-sm btn-secondary">
+							+ Add
+						</button>
+					</div>
+				</CardHeader>
+				<CardContent>
+					<div class="ingredient-list">
+						{#each recipeIngredients as ri, index}
+							<div class="ingredient-row">
+								<select bind:value={ri.ingredient_id} class="input">
+									{#each ingredients as ing}
+										<option value={ing.id}>{ing.name}</option>
+									{/each}
+								</select>
+								<input type="text" bind:value={ri.quantity} placeholder="Qty" class="input input-sm" />
+								<input type="text" bind:value={ri.unit} placeholder="Unit" class="input input-sm" />
+								<input type="text" bind:value={ri.notes} placeholder="Notes" class="input" />
+								<button type="button" onclick={() => removeIngredient(index)} class="btn-remove">×</button>
+							</div>
 						{/each}
 					</div>
-				</div>
+				</CardContent>
+			</Card>
 
-				{#if tags.length > 0}
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-						<div class="flex flex-wrap gap-2">
-							{#each tags as tag}
-								<button
-									type="button"
-									class="px-3 py-1 rounded-full text-sm {selectedTagIds.includes(tag.id)
-										? 'bg-blue-600 text-white'
-										: 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-									onclick={() => {
-										if (selectedTagIds.includes(tag.id)) {
-											selectedTagIds = selectedTagIds.filter((id) => id !== tag.id);
-										} else {
-											selectedTagIds = [...selectedTagIds, tag.id];
-										}
-									}}
-								>
-									{tag.name}
-								</button>
-							{/each}
-						</div>
-					</div>
-				{/if}
-			</div>
-
-			<div class="bg-white p-6 rounded-lg shadow-sm border">
-				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-lg font-semibold">Ingredients</h2>
-					<button
-						type="button"
-						onclick={addIngredient}
-						disabled={ingredients.length === 0}
-						class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-					>
-						+ Add
-					</button>
-				</div>
-
-				<div class="space-y-3">
-					{#each recipeIngredients as ri, index}
-						<div class="flex gap-2 items-start">
-							<select bind:value={ri.ingredient_id} class="flex-1 px-3 py-2 border rounded-lg">
-								{#each ingredients as ing}
-									<option value={ing.id}>{ing.name}</option>
-								{/each}
-							</select>
-							<input
-								type="text"
-								bind:value={ri.quantity}
-								placeholder="Qty"
-								class="w-20 px-3 py-2 border rounded-lg"
-							/>
-							<input
-								type="text"
-								bind:value={ri.unit}
-								placeholder="Unit"
-								class="w-20 px-3 py-2 border rounded-lg"
-							/>
-							<input
-								type="text"
-								bind:value={ri.notes}
-								placeholder="Notes"
-								class="flex-1 px-3 py-2 border rounded-lg"
-							/>
-							<button
-								type="button"
-								onclick={() => removeIngredient(index)}
-								class="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
-							>
-								×
-							</button>
-						</div>
-					{/each}
-				</div>
-			</div>
-
-			<div class="flex gap-4">
-				<button
-					type="submit"
-					disabled={saving}
-					class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-				>
+			<div class="form-actions">
+				<button type="submit" disabled={saving} class="btn btn-primary">
 					{saving ? 'Saving...' : 'Save Changes'}
 				</button>
-				<a
-					href="/recipes/{recipe.id}"
-					class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-				>
-					Cancel
-				</a>
+				<a href="/recipes/{recipe.id}" class="btn btn-secondary">Cancel</a>
 			</div>
 		</form>
 	</div>
 {/if}
+
+<style>
+	.page {
+		max-width: 800px;
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-6);
+	}
+
+	h1 {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-8);
+		margin: 0;
+	}
+
+	.form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-6);
+	}
+
+	.form-content {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-4);
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-1);
+	}
+
+	.form-group label,
+	.form-group .label {
+		font-size: var(--font-size-0);
+		font-weight: var(--font-weight-6);
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: var(--size-4);
+	}
+
+	@media (max-width: 768px) {
+		.form-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	.section-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+	}
+
+	.input {
+		width: 100%;
+		padding: var(--size-2) var(--size-4);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+
+	.input-sm {
+		width: 80px;
+		flex-shrink: 0;
+	}
+
+	.btn {
+		padding: var(--size-2) var(--size-4);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+		cursor: pointer;
+		text-decoration: none;
+		border: none;
+	}
+
+	.btn-sm {
+		padding: var(--size-1) var(--size-3);
+		font-size: var(--font-size-0);
+	}
+
+	.btn-primary {
+		background: var(--color-primary);
+		color: var(--nord6);
+	}
+
+	.btn-primary:hover {
+		background: var(--nord9);
+	}
+
+	.btn-primary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.btn-secondary {
+		background: var(--color-accent);
+		color: var(--color-text);
+	}
+
+	.btn-secondary:hover {
+		background: var(--color-border);
+	}
+
+	.btn-secondary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.loading {
+		text-align: center;
+		padding: var(--size-8) 0;
+	}
+
+	.error-message {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+	}
+
+	.tag-selector {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--size-2);
+	}
+
+	.tag-btn {
+		padding: var(--size-1) var(--size-3);
+		border-radius: 9999px;
+		font-size: var(--font-size-0);
+		cursor: pointer;
+		border: none;
+		background: var(--color-accent);
+		color: var(--color-text-muted);
+		transition: all 0.2s;
+	}
+
+	.tag-btn:hover {
+		background: var(--color-border);
+	}
+
+	.tag-btn.selected {
+		background: var(--color-success);
+		color: var(--nord6);
+	}
+
+	.tag-btn.tag-custom.selected {
+		background: var(--color-primary);
+		color: var(--nord6);
+	}
+
+	.ingredient-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-3);
+	}
+
+	.ingredient-row {
+		display: flex;
+		gap: var(--size-2);
+		align-items: center;
+	}
+
+	.ingredient-row select {
+		flex: 1;
+	}
+
+	.ingredient-row input:last-of-type {
+		flex: 1;
+	}
+
+	.btn-remove {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--color-error);
+		font-size: var(--font-size-3);
+		padding: var(--size-1) var(--size-2);
+		border-radius: var(--radius-2);
+	}
+
+	.btn-remove:hover {
+		background: rgba(191, 97, 106, 0.1);
+	}
+
+	.form-actions {
+		display: flex;
+		gap: var(--size-4);
+	}
+</style>

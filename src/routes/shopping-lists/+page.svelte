@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Card, CardContent, Modal } from '@mskalski/home-ui';
 	import type { ShoppingList } from '$lib/types';
 	import { api, formatDate, toISODate, getWeekStart, addDays } from '$lib/utils';
 	import { onMount } from 'svelte';
@@ -72,173 +73,292 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-3xl font-bold text-gray-900">Shopping Lists</h1>
-		<div class="flex gap-2">
-			<button
-				onclick={() => (showGenerateModal = true)}
-				class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-			>
+<div class="page">
+	<div class="page-header">
+		<h1>Shopping Lists</h1>
+		<div class="header-actions">
+			<button onclick={() => (showGenerateModal = true)} class="btn btn-success">
 				Generate from Meals
 			</button>
-			<button
-				onclick={() => (showCreateModal = true)}
-				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-			>
-				New List
-			</button>
+			<button onclick={() => (showCreateModal = true)} class="btn btn-primary">New List</button>
 		</div>
 	</div>
 
 	{#if error}
-		<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
+		<div class="error-message">{error}</div>
 	{/if}
 
 	{#if loading}
-		<div class="text-center py-12">Loading...</div>
+		<div class="loading">Loading...</div>
 	{:else if lists.length === 0}
-		<div class="text-center py-12 text-gray-500">
+		<div class="empty-state">
 			No shopping lists yet. Create one or generate from your meal plan!
 		</div>
 	{:else}
-		<div class="grid gap-4">
+		<div class="list-grid">
 			{#each lists as list}
-				<div class="bg-white p-4 rounded-lg shadow-sm border">
-					<div class="flex items-center justify-between">
-						<div>
-							<a href="/shopping-lists/{list.id}" class="font-semibold text-lg hover:text-blue-600">
-								{list.name}
-							</a>
-							{#if list.start_date && list.end_date}
-								<p class="text-sm text-gray-500">
-									{formatDate(list.start_date)} - {formatDate(list.end_date)}
-								</p>
-							{/if}
+				<Card>
+					<CardContent>
+						<div class="list-header">
+							<div>
+								<a href="/shopping-lists/{list.id}" class="list-name">{list.name}</a>
+								{#if list.start_date && list.end_date}
+									<p class="list-dates">
+										{formatDate(list.start_date)} - {formatDate(list.end_date)}
+									</p>
+								{/if}
+							</div>
+							<div class="list-actions">
+								<a href="/shopping-lists/{list.id}" class="btn btn-sm btn-primary">View</a>
+								<button onclick={() => deleteList(list.id)} class="btn btn-sm btn-danger">Delete</button>
+							</div>
 						</div>
-						<div class="flex items-center gap-4">
-							<div class="text-sm text-gray-600">
+						<div class="progress-section">
+							<div class="progress-text">
 								{list.items.filter((i) => i.is_checked).length} / {list.items.length} items
 							</div>
-							<div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-								<div
-									class="h-full bg-green-500 transition-all"
-									style="width: {getProgress(list)}%"
-								></div>
+							<div class="progress-bar">
+								<div class="progress-fill" style="width: {getProgress(list)}%"></div>
 							</div>
-							<a
-								href="/shopping-lists/{list.id}"
-								class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
-							>
-								View
-							</a>
-							<button
-								onclick={() => deleteList(list.id)}
-								class="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
-							>
-								Delete
-							</button>
 						</div>
-					</div>
-				</div>
+					</CardContent>
+				</Card>
 			{/each}
 		</div>
 	{/if}
 </div>
 
-{#if showCreateModal}
-	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-		<div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-			<h2 class="text-xl font-semibold mb-4">New Shopping List</h2>
-			<form onsubmit={(e) => { e.preventDefault(); createList(); }} class="space-y-4">
-				<div>
-					<label for="listName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-					<input
-						id="listName"
-						type="text"
-						bind:value={newListName}
-						required
-						class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-					/>
-				</div>
-				<div class="flex gap-2">
-					<button
-						type="submit"
-						class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-					>
-						Create
-					</button>
-					<button
-						type="button"
-						onclick={() => (showCreateModal = false)}
-						class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-					>
-						Cancel
-					</button>
-				</div>
-			</form>
+<Modal
+	open={showCreateModal}
+	title="New Shopping List"
+	onCancel={() => (showCreateModal = false)}
+	onConfirm={createList}
+	confirmText="Create"
+	confirmDisabled={!newListName.trim()}
+>
+	<div class="modal-form">
+		<div class="form-group">
+			<label for="listName">Name</label>
+			<input id="listName" type="text" bind:value={newListName} required class="input" />
 		</div>
 	</div>
-{/if}
+</Modal>
 
-{#if showGenerateModal}
-	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-		<div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-			<h2 class="text-xl font-semibold mb-4">Generate from Meal Plan</h2>
-			<form onsubmit={(e) => { e.preventDefault(); generateList(); }} class="space-y-4">
-				<div>
-					<label for="genName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-					<input
-						id="genName"
-						type="text"
-						bind:value={generatingName}
-						placeholder="Weekly Shopping"
-						required
-						class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-					/>
-				</div>
-				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">
-							Start Date
-						</label>
-						<input
-							id="startDate"
-							type="date"
-							bind:value={startDate}
-							required
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
-					</div>
-					<div>
-						<label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">
-							End Date
-						</label>
-						<input
-							id="endDate"
-							type="date"
-							bind:value={endDate}
-							required
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
-					</div>
-				</div>
-				<div class="flex gap-2">
-					<button
-						type="submit"
-						class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-					>
-						Generate
-					</button>
-					<button
-						type="button"
-						onclick={() => (showGenerateModal = false)}
-						class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-					>
-						Cancel
-					</button>
-				</div>
-			</form>
+<Modal
+	open={showGenerateModal}
+	title="Generate from Meal Plan"
+	onCancel={() => (showGenerateModal = false)}
+	onConfirm={generateList}
+	confirmText="Generate"
+	confirmVariant="success"
+	confirmDisabled={!generatingName.trim()}
+>
+	<div class="modal-form">
+		<div class="form-group">
+			<label for="genName">Name</label>
+			<input
+				id="genName"
+				type="text"
+				bind:value={generatingName}
+				placeholder="Weekly Shopping"
+				required
+				class="input"
+			/>
+		</div>
+		<div class="form-row">
+			<div class="form-group">
+				<label for="startDate">Start Date</label>
+				<input id="startDate" type="date" bind:value={startDate} required class="input" />
+			</div>
+			<div class="form-group">
+				<label for="endDate">End Date</label>
+				<input id="endDate" type="date" bind:value={endDate} required class="input" />
+			</div>
 		</div>
 	</div>
-{/if}
+</Modal>
+
+<style>
+	.page {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-6);
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.page-header h1 {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-8);
+		margin: 0;
+	}
+
+	.header-actions {
+		display: flex;
+		gap: var(--size-2);
+	}
+
+	.btn {
+		padding: var(--size-2) var(--size-4);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+		cursor: pointer;
+		text-decoration: none;
+		transition: all 0.2s;
+		border: none;
+	}
+
+	.btn-sm {
+		padding: var(--size-1) var(--size-3);
+		font-size: var(--font-size-0);
+	}
+
+	.btn-primary {
+		background: var(--color-primary);
+		color: var(--nord6);
+	}
+
+	.btn-primary:hover {
+		background: var(--nord9);
+	}
+
+	.btn-success {
+		background: var(--color-success);
+		color: var(--nord6);
+	}
+
+	.btn-success:hover {
+		opacity: 0.9;
+	}
+
+	.btn-danger {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+	}
+
+	.btn-danger:hover {
+		background: rgba(191, 97, 106, 0.3);
+	}
+
+	.loading {
+		text-align: center;
+		padding: var(--size-8) 0;
+	}
+
+	.error-message {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: var(--size-8) 0;
+		color: var(--color-text-muted);
+	}
+
+	.list-grid {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-4);
+	}
+
+	.list-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: var(--size-4);
+	}
+
+	.list-name {
+		font-size: var(--font-size-3);
+		font-weight: var(--font-weight-6);
+		color: var(--color-text);
+		text-decoration: none;
+	}
+
+	.list-name:hover {
+		color: var(--color-primary);
+	}
+
+	.list-dates {
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+		margin: var(--size-1) 0 0 0;
+	}
+
+	.list-actions {
+		display: flex;
+		gap: var(--size-2);
+	}
+
+	.progress-section {
+		display: flex;
+		align-items: center;
+		gap: var(--size-4);
+	}
+
+	.progress-text {
+		font-size: var(--font-size-1);
+		color: var(--color-text-muted);
+		white-space: nowrap;
+	}
+
+	.progress-bar {
+		flex: 1;
+		height: 8px;
+		background: var(--color-accent);
+		border-radius: 9999px;
+		overflow: hidden;
+	}
+
+	.progress-fill {
+		height: 100%;
+		background: var(--color-success);
+		transition: width 0.3s;
+	}
+
+	.modal-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-4);
+	}
+
+	.form-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--size-4);
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-2);
+	}
+
+	.form-group label {
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+	}
+
+	.input {
+		width: 100%;
+		padding: var(--size-2) var(--size-4);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+</style>
