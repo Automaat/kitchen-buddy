@@ -153,6 +153,14 @@ class RecipeImportResponse(BaseModel):
     image_url: str | None = None
     source_url: str
 
+    @field_validator("source_url")
+    @classmethod
+    def validate_source_url(cls, v: str) -> str:
+        parsed = urlparse(v)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError("source_url must use http or https scheme")
+        return v
+
 
 class RecipeNutritionResponse(BaseModel):
     calories: float | None = None
