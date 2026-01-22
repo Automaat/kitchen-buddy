@@ -137,8 +137,8 @@
 	<div class="page-header">
 		<h1>Pantry</h1>
 		<div class="header-actions">
-			<a href="/suggestions" class="btn btn-success">What can I cook?</a>
-			<button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Item</button>
+			<a href="/suggestions" class="btn btn-success tap-target">What can I cook?</a>
+			<button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary tap-target">Add Item</button>
 		</div>
 	</div>
 
@@ -183,8 +183,8 @@
 						<input id="notes" type="text" bind:value={notes} placeholder="Location, brand, etc." class="input" />
 					</div>
 					<div class="form-actions">
-						<button type="submit" class="btn btn-primary">{editingId ? 'Update' : 'Add'}</button>
-						<button type="button" onclick={resetForm} class="btn btn-secondary">Cancel</button>
+						<button type="submit" class="btn btn-primary tap-target">{editingId ? 'Update' : 'Add'}</button>
+						<button type="button" onclick={resetForm} class="btn btn-secondary tap-target">Cancel</button>
 					</div>
 				</form>
 			</CardContent>
@@ -242,8 +242,8 @@
 									<span class="notes">{item.notes}</span>
 								{/if}
 								<div class="item-actions">
-									<button onclick={() => startEdit(item)} class="link-btn">Edit</button>
-									<button onclick={() => deleteItem(item.id)} class="link-btn danger">Remove</button>
+									<button onclick={() => startEdit(item)} class="link-btn tap-target">Edit</button>
+									<button onclick={() => deleteItem(item.id)} class="link-btn danger tap-target">Remove</button>
 								</div>
 							</div>
 						{/each}
@@ -265,6 +265,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: var(--size-4);
+		flex-wrap: wrap;
 	}
 
 	.page-header h1 {
@@ -276,6 +278,7 @@
 	.header-actions {
 		display: flex;
 		gap: var(--size-2);
+		flex-wrap: wrap;
 	}
 
 	.btn {
