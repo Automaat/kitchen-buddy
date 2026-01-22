@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Card, CardContent, Modal } from '@mskalski/home-ui';
 	import type { WeekMealPlan, MealPlan, RecipeListItem, MealType } from '$lib/types';
 	import { api, getImageUrl, toISODate, getWeekStart, getWeekDays, addDays, formatDate } from '$lib/utils';
 	import { onMount } from 'svelte';
@@ -106,133 +107,314 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-3xl font-bold text-gray-900">Meal Planner</h1>
-		<div class="flex items-center gap-4">
-			<button onclick={prevWeek} class="p-2 hover:bg-gray-100 rounded-lg">←</button>
-			<span class="font-medium">
+<div class="page">
+	<div class="page-header">
+		<h1>Meal Planner</h1>
+		<div class="week-nav">
+			<button onclick={prevWeek} class="nav-btn">←</button>
+			<span class="week-range">
 				{formatDate(currentWeekStart)} - {formatDate(addDays(currentWeekStart, 6))}
 			</span>
-			<button onclick={nextWeek} class="p-2 hover:bg-gray-100 rounded-lg">→</button>
+			<button onclick={nextWeek} class="nav-btn">→</button>
 		</div>
 	</div>
 
 	{#if error}
-		<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
+		<div class="error-message">{error}</div>
 	{/if}
 
 	{#if loading}
-		<div class="text-center py-12">Loading...</div>
+		<div class="loading">Loading...</div>
 	{:else}
-		<div class="grid grid-cols-7 gap-2">
+		<div class="week-grid">
 			{#each weekDays as day}
-				<div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-					<div
-						class="px-3 py-2 bg-gray-50 border-b text-center font-medium {toISODate(day) ===
-						toISODate(new Date())
-							? 'bg-blue-50 text-blue-700'
-							: ''}"
-					>
+				<Card>
+					<div class="day-header" class:today={toISODate(day) === toISODate(new Date())}>
 						{formatDate(day)}
 					</div>
-					<div class="p-2 space-y-2 min-h-[200px]">
-						{#each mealTypes as mealType}
-							{@const meals = getMealsForDay(day).filter((m) => m.meal_type === mealType)}
-							<div class="text-xs text-gray-500 font-medium">{mealTypeLabels[mealType]}</div>
-							{#each meals as meal}
-								<div
-									class="p-2 bg-gray-50 rounded text-sm group relative {meal.is_completed
-										? 'opacity-60'
-										: ''}"
-								>
-									<div class="flex items-center gap-2">
-										<button onclick={() => toggleComplete(meal)} class="hover:scale-110">
-											{meal.is_completed ? '✓' : '○'}
-										</button>
-										<a
-											href="/recipes/{meal.recipe.id}"
-											class="flex-1 truncate hover:text-blue-600 {meal.is_completed
-												? 'line-through'
-												: ''}"
-										>
-											{meal.recipe.title}
-										</a>
-										<button
-											onclick={() => deleteMealPlan(meal.id)}
-											class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700"
-										>
-											×
-										</button>
-									</div>
+					<CardContent>
+						<div class="day-meals">
+							{#each mealTypes as mealType}
+								{@const meals = getMealsForDay(day).filter((m) => m.meal_type === mealType)}
+								<div class="meal-section">
+									<div class="meal-type-label">{mealTypeLabels[mealType]}</div>
+									{#each meals as meal}
+										<div class="meal-item" class:completed={meal.is_completed}>
+											<button onclick={() => toggleComplete(meal)} class="check-btn">
+												{meal.is_completed ? '✓' : '○'}
+											</button>
+											<a
+												href="/recipes/{meal.recipe.id}"
+												class="meal-title"
+												class:done={meal.is_completed}
+											>
+												{meal.recipe.title}
+											</a>
+											<button onclick={() => deleteMealPlan(meal.id)} class="delete-btn">×</button>
+										</div>
+									{/each}
+									<button onclick={() => openAddModal(day, mealType)} class="add-meal-btn">
+										+ Add
+									</button>
 								</div>
 							{/each}
-							<button
-								onclick={() => openAddModal(day, mealType)}
-								class="w-full p-1 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
-							>
-								+ Add
-							</button>
-						{/each}
-					</div>
-				</div>
+						</div>
+					</CardContent>
+				</Card>
 			{/each}
 		</div>
 	{/if}
 </div>
 
-{#if showAddModal}
-	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-		<div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-			<h2 class="text-xl font-semibold mb-4">Add Meal</h2>
-			{#if recipes.length === 0}
-				<p class="text-gray-500 mb-4">
-					No recipes available.
-					<a href="/recipes/new" class="text-blue-600 hover:underline">Create one first.</a>
-				</p>
-			{:else}
-				<form onsubmit={(e) => { e.preventDefault(); addMealPlan(); }} class="space-y-4">
-					<div>
-						<label for="recipe" class="block text-sm font-medium text-gray-700 mb-1">Recipe</label>
-						<select
-							id="recipe"
-							bind:value={selectedRecipeId}
-							class="w-full px-4 py-2 border rounded-lg"
-						>
-							{#each recipes as recipe}
-								<option value={recipe.id}>{recipe.title}</option>
-							{/each}
-						</select>
-					</div>
-					<div>
-						<label for="mealServings" class="block text-sm font-medium text-gray-700 mb-1">
-							Servings
-						</label>
-						<input
-							id="mealServings"
-							type="number"
-							bind:value={servings}
-							min="1"
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
-					</div>
-					<div class="flex gap-2">
-						<button
-							type="submit"
-							class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-						>
-							Add
-						</button>
-						<button
-							type="button"
-							onclick={() => (showAddModal = false)}
-							class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-						>
-							Cancel
-						</button>
-					</div>
-				</form>
-			{/if}
+<Modal
+	open={showAddModal}
+	title="Add Meal"
+	onCancel={() => (showAddModal = false)}
+	onConfirm={addMealPlan}
+	confirmText="Add"
+	confirmDisabled={!selectedRecipeId}
+>
+	{#if recipes.length === 0}
+		<p class="no-recipes">
+			No recipes available.
+			<a href="/recipes/new" class="link">Create one first.</a>
+		</p>
+	{:else}
+		<div class="modal-form">
+			<div class="form-group">
+				<label for="recipe">Recipe</label>
+				<select id="recipe" bind:value={selectedRecipeId} class="input">
+					{#each recipes as recipe}
+						<option value={recipe.id}>{recipe.title}</option>
+					{/each}
+				</select>
+			</div>
+			<div class="form-group">
+				<label for="mealServings">Servings</label>
+				<input id="mealServings" type="number" bind:value={servings} min="1" class="input" />
+			</div>
 		</div>
-	</div>
-{/if}
+	{/if}
+</Modal>
+
+<style>
+	.page {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-6);
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.page-header h1 {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-8);
+		margin: 0;
+	}
+
+	.week-nav {
+		display: flex;
+		align-items: center;
+		gap: var(--size-4);
+	}
+
+	.nav-btn {
+		padding: var(--size-2);
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: var(--font-size-3);
+		border-radius: var(--radius-2);
+	}
+
+	.nav-btn:hover {
+		background: var(--color-accent);
+	}
+
+	.week-range {
+		font-weight: var(--font-weight-6);
+	}
+
+	.loading {
+		text-align: center;
+		padding: var(--size-8) 0;
+	}
+
+	.error-message {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+	}
+
+	.week-grid {
+		display: grid;
+		grid-template-columns: repeat(7, 1fr);
+		gap: var(--size-2);
+	}
+
+	@media (max-width: 1200px) {
+		.week-grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	@media (max-width: 768px) {
+		.week-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.day-header {
+		padding: var(--size-2) var(--size-3);
+		background: var(--color-bg-muted);
+		text-align: center;
+		font-weight: var(--font-weight-6);
+		border-bottom: 1px solid var(--color-border);
+		border-radius: var(--radius-2) var(--radius-2) 0 0;
+	}
+
+	.day-header.today {
+		background: rgba(136, 192, 208, 0.2);
+		color: var(--color-primary);
+	}
+
+	.day-meals {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-3);
+		min-height: 200px;
+	}
+
+	.meal-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-1);
+	}
+
+	.meal-type-label {
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+		font-weight: var(--font-weight-6);
+	}
+
+	.meal-item {
+		display: flex;
+		align-items: center;
+		gap: var(--size-2);
+		padding: var(--size-2);
+		background: var(--color-bg-muted);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-0);
+	}
+
+	.meal-item.completed {
+		opacity: 0.6;
+	}
+
+	.check-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+	}
+
+	.check-btn:hover {
+		transform: scale(1.1);
+	}
+
+	.meal-title {
+		flex: 1;
+		text-decoration: none;
+		color: var(--color-text);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.meal-title:hover {
+		color: var(--color-primary);
+	}
+
+	.meal-title.done {
+		text-decoration: line-through;
+	}
+
+	.delete-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--color-error);
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+
+	.meal-item:hover .delete-btn {
+		opacity: 1;
+	}
+
+	.add-meal-btn {
+		padding: var(--size-1);
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+		background: none;
+		border: none;
+		cursor: pointer;
+		text-align: center;
+		border-radius: var(--radius-2);
+	}
+
+	.add-meal-btn:hover {
+		background: var(--color-bg-muted);
+		color: var(--color-text);
+	}
+
+	.modal-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-4);
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-2);
+	}
+
+	.form-group label {
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+	}
+
+	.input {
+		width: 100%;
+		padding: var(--size-2) var(--size-4);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+
+	.no-recipes {
+		color: var(--color-text-muted);
+	}
+
+	.link {
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+
+	.link:hover {
+		text-decoration: underline;
+	}
+</style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Card, CardHeader, CardTitle, CardContent } from '@mskalski/home-ui';
 	import type { RecipeImportResponse } from '$lib/types';
 	import { api } from '$lib/utils';
 	import { goto } from '$app/navigation';
@@ -56,112 +57,288 @@
 	}
 </script>
 
-<div class="max-w-3xl mx-auto space-y-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-3xl font-bold text-gray-900">Import Recipe from URL</h1>
-		<a href="/recipes/new" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-			Manual Entry
-		</a>
+<div class="page">
+	<div class="page-header">
+		<h1>Import Recipe from URL</h1>
+		<a href="/recipes/new" class="btn btn-secondary">Manual Entry</a>
 	</div>
 
-	<div class="bg-white p-6 rounded-lg shadow-sm border space-y-4">
-		<p class="text-gray-600">
-			Paste a recipe URL below to import the recipe data. Works best with sites that use schema.org
-			recipe markup (AllRecipes, Food Network, BBC Good Food, etc.).
-		</p>
+	<Card>
+		<CardContent>
+			<p class="description">
+				Paste a recipe URL below to import the recipe data. Works best with sites that use schema.org
+				recipe markup (AllRecipes, Food Network, BBC Good Food, etc.).
+			</p>
 
-		<div class="flex gap-2">
-			<input
-				type="url"
-				bind:value={url}
-				placeholder="https://example.com/recipe/chocolate-cake"
-				class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-			/>
-			<button
-				onclick={handleImport}
-				disabled={loading || !url.trim()}
-				class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-			>
-				{loading ? 'Importing...' : 'Import'}
-			</button>
-		</div>
+			<div class="import-form">
+				<input
+					type="url"
+					bind:value={url}
+					placeholder="https://example.com/recipe/chocolate-cake"
+					class="input"
+				/>
+				<button onclick={handleImport} disabled={loading || !url.trim()} class="btn btn-primary">
+					{loading ? 'Importing...' : 'Import'}
+				</button>
+			</div>
 
-		{#if error}
-			<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
-		{/if}
-	</div>
+			{#if error}
+				<div class="error-message">{error}</div>
+			{/if}
+		</CardContent>
+	</Card>
 
 	{#if importedData}
-		<div class="bg-white p-6 rounded-lg shadow-sm border space-y-4">
-			<h2 class="text-xl font-semibold">Preview</h2>
-
-			<div class="grid md:grid-cols-2 gap-4">
-				{#if importedData.image_url}
-					<img
-						src={importedData.image_url}
-						alt={importedData.title || 'Recipe'}
-						class="w-full h-48 object-cover rounded-lg"
-					/>
-				{/if}
-				<div class="space-y-2">
-					<h3 class="text-lg font-medium">{importedData.title || 'Untitled Recipe'}</h3>
-					{#if importedData.description}
-						<p class="text-gray-600 text-sm">{importedData.description}</p>
+		<Card>
+			<CardHeader>
+				<CardTitle>Preview</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<div class="preview-grid">
+					{#if importedData.image_url}
+						<img src={importedData.image_url} alt={importedData.title || 'Recipe'} class="preview-image" />
 					{/if}
-					<div class="flex flex-wrap gap-4 text-sm text-gray-500">
-						{#if importedData.prep_time_minutes}
-							<span>Prep: {importedData.prep_time_minutes} min</span>
+					<div class="preview-info">
+						<h3>{importedData.title || 'Untitled Recipe'}</h3>
+						{#if importedData.description}
+							<p class="preview-desc">{importedData.description}</p>
 						{/if}
-						{#if importedData.cook_time_minutes}
-							<span>Cook: {importedData.cook_time_minutes} min</span>
-						{/if}
-						{#if importedData.servings}
-							<span>Servings: {importedData.servings}</span>
-						{/if}
+						<div class="preview-meta">
+							{#if importedData.prep_time_minutes}
+								<span>Prep: {importedData.prep_time_minutes} min</span>
+							{/if}
+							{#if importedData.cook_time_minutes}
+								<span>Cook: {importedData.cook_time_minutes} min</span>
+							{/if}
+							{#if importedData.servings}
+								<span>Servings: {importedData.servings}</span>
+							{/if}
+						</div>
 					</div>
 				</div>
-			</div>
 
-			{#if importedData.ingredients.length > 0}
-				<div>
-					<h4 class="font-medium mb-2">Ingredients ({importedData.ingredients.length})</h4>
-					<ul class="text-sm text-gray-600 space-y-1 max-h-40 overflow-y-auto">
-						{#each importedData.ingredients as ingredient}
-							<li>• {ingredient}</li>
-						{/each}
-					</ul>
-				</div>
-			{/if}
-
-			{#if importedData.instructions}
-				<div>
-					<h4 class="font-medium mb-2">Instructions</h4>
-					<div class="text-sm text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto">
-						{importedData.instructions}
+				{#if importedData.ingredients.length > 0}
+					<div class="preview-section">
+						<h4>Ingredients ({importedData.ingredients.length})</h4>
+						<ul class="ingredient-list">
+							{#each importedData.ingredients as ingredient}
+								<li>• {ingredient}</li>
+							{/each}
+						</ul>
 					</div>
+				{/if}
+
+				{#if importedData.instructions}
+					<div class="preview-section">
+						<h4>Instructions</h4>
+						<div class="instructions-preview">{importedData.instructions}</div>
+					</div>
+				{/if}
+
+				<div class="notice">
+					<strong>Note:</strong> Ingredients will need to be matched to your ingredient database after
+					creating the recipe. You can do this on the edit page.
 				</div>
-			{/if}
 
-			<div class="bg-yellow-50 p-4 rounded-lg text-sm text-yellow-800">
-				<strong>Note:</strong> Ingredients will need to be matched to your ingredient database after
-				creating the recipe. You can do this on the edit page.
-			</div>
-
-			<div class="flex gap-4">
-				<button
-					onclick={handleCreate}
-					disabled={loading}
-					class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-				>
-					{loading ? 'Creating...' : 'Create Recipe'}
-				</button>
-				<button
-					onclick={() => (importedData = null)}
-					class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-				>
-					Cancel
-				</button>
-			</div>
-		</div>
+				<div class="preview-actions">
+					<button onclick={handleCreate} disabled={loading} class="btn btn-success">
+						{loading ? 'Creating...' : 'Create Recipe'}
+					</button>
+					<button onclick={() => (importedData = null)} class="btn btn-secondary">Cancel</button>
+				</div>
+			</CardContent>
+		</Card>
 	{/if}
 </div>
+
+<style>
+	.page {
+		max-width: 800px;
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-6);
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.page-header h1 {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-8);
+		margin: 0;
+	}
+
+	.description {
+		color: var(--color-text-muted);
+		margin: 0 0 var(--size-4) 0;
+	}
+
+	.import-form {
+		display: flex;
+		gap: var(--size-2);
+	}
+
+	.import-form .input {
+		flex: 1;
+	}
+
+	.input {
+		width: 100%;
+		padding: var(--size-2) var(--size-4);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+
+	.btn {
+		padding: var(--size-2) var(--size-4);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+		cursor: pointer;
+		text-decoration: none;
+		border: none;
+		white-space: nowrap;
+	}
+
+	.btn-primary {
+		background: var(--color-primary);
+		color: var(--nord6);
+	}
+
+	.btn-primary:hover {
+		background: var(--nord9);
+	}
+
+	.btn-primary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.btn-secondary {
+		background: var(--color-accent);
+		color: var(--color-text);
+	}
+
+	.btn-secondary:hover {
+		background: var(--color-border);
+	}
+
+	.btn-success {
+		background: var(--color-success);
+		color: var(--nord6);
+	}
+
+	.btn-success:hover {
+		opacity: 0.9;
+	}
+
+	.btn-success:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.error-message {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+		margin-top: var(--size-4);
+	}
+
+	.preview-grid {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: var(--size-4);
+		margin-bottom: var(--size-4);
+	}
+
+	@media (max-width: 600px) {
+		.preview-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.preview-image {
+		width: 200px;
+		height: 150px;
+		object-fit: cover;
+		border-radius: var(--radius-2);
+	}
+
+	.preview-info h3 {
+		font-size: var(--font-size-3);
+		font-weight: var(--font-weight-6);
+		margin: 0 0 var(--size-2) 0;
+	}
+
+	.preview-desc {
+		color: var(--color-text-muted);
+		font-size: var(--font-size-0);
+		margin: 0 0 var(--size-2) 0;
+	}
+
+	.preview-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--size-4);
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+	}
+
+	.preview-section {
+		margin-bottom: var(--size-4);
+	}
+
+	.preview-section h4 {
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+		margin: 0 0 var(--size-2) 0;
+	}
+
+	.ingredient-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+		max-height: 150px;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-1);
+	}
+
+	.instructions-preview {
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+		white-space: pre-wrap;
+		max-height: 150px;
+		overflow-y: auto;
+	}
+
+	.notice {
+		background: rgba(235, 203, 139, 0.2);
+		color: #d08770;
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-0);
+		margin-bottom: var(--size-4);
+	}
+
+	.preview-actions {
+		display: flex;
+		gap: var(--size-4);
+	}
+</style>

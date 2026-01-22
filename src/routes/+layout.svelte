@@ -1,5 +1,7 @@
 <script lang="ts">
-	import '../app.css';
+	import '@mskalski/home-ui/styles';
+	import { Navbar } from '@mskalski/home-ui';
+	import { page } from '$app/stores';
 
 	const navItems = [
 		{ href: '/', label: 'Dashboard', icon: '🏠' },
@@ -16,27 +18,25 @@
 	let { children } = $props();
 </script>
 
-<div class="min-h-screen bg-gray-50">
-	<nav class="bg-white shadow-sm border-b">
-		<div class="max-w-7xl mx-auto px-4">
-			<div class="flex items-center justify-between h-16">
-				<a href="/" class="text-xl font-bold text-gray-900">Kitchen Buddy</a>
-				<div class="flex space-x-4">
-					{#each navItems as item}
-						<a
-							href={item.href}
-							class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-						>
-							<span class="mr-1">{item.icon}</span>
-							{item.label}
-						</a>
-					{/each}
-				</div>
-			</div>
-		</div>
-	</nav>
+<div class="app">
+	<Navbar items={navItems} brand="🍳 Kitchen Buddy" currentPath={$page.url.pathname} />
 
-	<main class="max-w-7xl mx-auto px-4 py-8">
+	<main class="main">
 		{@render children()}
 	</main>
 </div>
+
+<style>
+	.app {
+		display: flex;
+		min-height: 100vh;
+	}
+
+	.main {
+		flex: 1;
+		padding: var(--size-6);
+		max-width: 1200px;
+		margin: 0 auto;
+		width: 100%;
+	}
+</style>

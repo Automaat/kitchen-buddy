@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { Card, CardHeader, CardTitle, CardContent } from '@mskalski/home-ui';
 	import type { PantryItem, Ingredient, IngredientCategory } from '$lib/types';
-	import { api, getImageUrl } from '$lib/utils';
+	import { api } from '$lib/utils';
 	import { onMount } from 'svelte';
 
 	let pantryItems: PantryItem[] = $state([]);
@@ -100,20 +101,6 @@
 		}
 	}
 
-	const categoryColors: Record<IngredientCategory, string> = {
-		produce: 'bg-green-100 text-green-800',
-		dairy: 'bg-blue-100 text-blue-800',
-		meat: 'bg-red-100 text-red-800',
-		seafood: 'bg-cyan-100 text-cyan-800',
-		pantry: 'bg-amber-100 text-amber-800',
-		frozen: 'bg-indigo-100 text-indigo-800',
-		bakery: 'bg-orange-100 text-orange-800',
-		beverages: 'bg-purple-100 text-purple-800',
-		condiments: 'bg-yellow-100 text-yellow-800',
-		spices: 'bg-rose-100 text-rose-800',
-		other: 'bg-gray-100 text-gray-800'
-	};
-
 	function isExpiringSoon(date: string | null): boolean {
 		if (!date) return false;
 		const expDate = new Date(date);
@@ -146,197 +133,340 @@
 	);
 </script>
 
-<div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<h1 class="text-3xl font-bold text-gray-900">Pantry</h1>
-		<div class="flex gap-2">
-			<a
-				href="/suggestions"
-				class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-			>
-				What can I cook?
-			</a>
-			<button
-				onclick={() => {
-					resetForm();
-					showForm = true;
-				}}
-				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-			>
-				Add Item
-			</button>
+<div class="page">
+	<div class="page-header">
+		<h1>Pantry</h1>
+		<div class="header-actions">
+			<a href="/suggestions" class="btn btn-success">What can I cook?</a>
+			<button onclick={() => { resetForm(); showForm = true; }} class="btn btn-primary">Add Item</button>
 		</div>
 	</div>
 
 	{#if showForm}
-		<div class="bg-white p-6 rounded-lg shadow-sm border">
-			<h2 class="text-lg font-semibold mb-4">
-				{editingId ? 'Edit Pantry Item' : 'Add to Pantry'}
-			</h2>
-			<form
-				onsubmit={(e) => {
-					e.preventDefault();
-					handleSubmit();
-				}}
-				class="space-y-4"
-			>
-				<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-					<div>
-						<label for="ingredient" class="block text-sm font-medium text-gray-700 mb-1">
-							Ingredient *
-						</label>
-						<select
-							id="ingredient"
-							bind:value={selectedIngredientId}
-							required
-							disabled={editingId !== null}
-							class="w-full px-4 py-2 border rounded-lg disabled:bg-gray-100"
-						>
-							<option value={null}>Select ingredient...</option>
-							{#each ingredients as ing}
-								<option value={ing.id}>{ing.name}</option>
-							{/each}
-						</select>
+		<Card>
+			<CardHeader>
+				<CardTitle>{editingId ? 'Edit Pantry Item' : 'Add to Pantry'}</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="form">
+					<div class="form-grid">
+						<div class="form-group">
+							<label for="ingredient">Ingredient *</label>
+							<select
+								id="ingredient"
+								bind:value={selectedIngredientId}
+								required
+								disabled={editingId !== null}
+								class="input"
+							>
+								<option value={null}>Select ingredient...</option>
+								{#each ingredients as ing}
+									<option value={ing.id}>{ing.name}</option>
+								{/each}
+							</select>
+						</div>
+						<div class="form-group">
+							<label for="quantity">Quantity *</label>
+							<input id="quantity" type="number" step="0.01" bind:value={quantity} required class="input" />
+						</div>
+						<div class="form-group">
+							<label for="unit">Unit</label>
+							<input id="unit" type="text" bind:value={unit} placeholder="g, ml, pcs..." class="input" />
+						</div>
+						<div class="form-group">
+							<label for="expiration">Expiration Date</label>
+							<input id="expiration" type="date" bind:value={expirationDate} class="input" />
+						</div>
 					</div>
-					<div>
-						<label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">
-							Quantity *
-						</label>
-						<input
-							id="quantity"
-							type="number"
-							step="0.01"
-							bind:value={quantity}
-							required
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
+					<div class="form-group">
+						<label for="notes">Notes</label>
+						<input id="notes" type="text" bind:value={notes} placeholder="Location, brand, etc." class="input" />
 					</div>
-					<div>
-						<label for="unit" class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
-						<input
-							id="unit"
-							type="text"
-							bind:value={unit}
-							placeholder="g, ml, pcs..."
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
+					<div class="form-actions">
+						<button type="submit" class="btn btn-primary">{editingId ? 'Update' : 'Add'}</button>
+						<button type="button" onclick={resetForm} class="btn btn-secondary">Cancel</button>
 					</div>
-					<div>
-						<label for="expiration" class="block text-sm font-medium text-gray-700 mb-1">
-							Expiration Date
-						</label>
-						<input
-							id="expiration"
-							type="date"
-							bind:value={expirationDate}
-							class="w-full px-4 py-2 border rounded-lg"
-						/>
-					</div>
-				</div>
-				<div>
-					<label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-					<input
-						id="notes"
-						type="text"
-						bind:value={notes}
-						placeholder="Location, brand, etc."
-						class="w-full px-4 py-2 border rounded-lg"
-					/>
-				</div>
-				<div class="flex gap-2">
-					<button
-						type="submit"
-						class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-					>
-						{editingId ? 'Update' : 'Add'}
-					</button>
-					<button
-						type="button"
-						onclick={resetForm}
-						class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-					>
-						Cancel
-					</button>
-				</div>
-			</form>
-		</div>
+				</form>
+			</CardContent>
+		</Card>
 	{/if}
 
-	<div class="bg-white p-4 rounded-lg shadow-sm border">
-		<input
-			type="text"
-			placeholder="Search pantry..."
-			bind:value={search}
-			oninput={loadPantryItems}
-			class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-		/>
-	</div>
+	<Card>
+		<CardContent>
+			<input
+				type="text"
+				placeholder="Search pantry..."
+				bind:value={search}
+				oninput={loadPantryItems}
+				class="input search-input"
+			/>
+		</CardContent>
+	</Card>
 
 	{#if error}
-		<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
+		<div class="error-message">{error}</div>
 	{/if}
 
 	{#if loading}
-		<div class="text-center py-12">Loading...</div>
+		<div class="loading">Loading...</div>
 	{:else if pantryItems.length === 0}
-		<div class="text-center py-12 text-gray-500">
-			Your pantry is empty. Add items to track what you have!
-		</div>
+		<div class="empty-state">Your pantry is empty. Add items to track what you have!</div>
 	{:else}
 		{#each Object.entries(groupedItems) as [category, items]}
-			<div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-				<div class="bg-gray-50 px-4 py-2 border-b">
-					<h2 class="font-semibold capitalize">{category}</h2>
-				</div>
-				<div class="divide-y">
-					{#each items as item}
-						<div
-							class="px-4 py-3 flex items-center justify-between hover:bg-gray-50"
-							class:bg-red-50={isExpired(item.expiration_date)}
-							class:bg-yellow-50={isExpiringSoon(item.expiration_date) &&
-								!isExpired(item.expiration_date)}
-						>
-							<div class="flex items-center gap-4">
-								<div>
-									<span class="font-medium">{item.ingredient_name}</span>
-									<span class="text-gray-500 ml-2">
-										{item.quantity}
-										{item.unit || ''}
-									</span>
+			<Card>
+				<CardHeader>
+					<CardTitle class="capitalize">{category}</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div class="item-list">
+						{#each items as item}
+							<div
+								class="item"
+								class:expired={isExpired(item.expiration_date)}
+								class:expiring={isExpiringSoon(item.expiration_date) && !isExpired(item.expiration_date)}
+							>
+								<div class="item-info">
+									<span class="item-name">{item.ingredient_name}</span>
+									<span class="item-qty">{item.quantity} {item.unit || ''}</span>
 								</div>
 								{#if item.expiration_date}
 									<span
-										class="text-xs px-2 py-0.5 rounded-full"
-										class:bg-red-100={isExpired(item.expiration_date)}
-										class:text-red-700={isExpired(item.expiration_date)}
-										class:bg-yellow-100={isExpiringSoon(item.expiration_date) &&
-											!isExpired(item.expiration_date)}
-										class:text-yellow-700={isExpiringSoon(item.expiration_date) &&
-											!isExpired(item.expiration_date)}
-										class:bg-gray-100={!isExpired(item.expiration_date) &&
-											!isExpiringSoon(item.expiration_date)}
-										class:text-gray-600={!isExpired(item.expiration_date) &&
-											!isExpiringSoon(item.expiration_date)}
+										class="exp-badge"
+										class:expired={isExpired(item.expiration_date)}
+										class:expiring={isExpiringSoon(item.expiration_date) && !isExpired(item.expiration_date)}
 									>
 										{isExpired(item.expiration_date) ? 'Expired' : ''} {item.expiration_date}
 									</span>
 								{/if}
 								{#if item.notes}
-									<span class="text-sm text-gray-500">{item.notes}</span>
+									<span class="notes">{item.notes}</span>
 								{/if}
+								<div class="item-actions">
+									<button onclick={() => startEdit(item)} class="link-btn">Edit</button>
+									<button onclick={() => deleteItem(item.id)} class="link-btn danger">Remove</button>
+								</div>
 							</div>
-							<div class="flex gap-2">
-								<button onclick={() => startEdit(item)} class="text-blue-600 hover:underline">
-									Edit
-								</button>
-								<button onclick={() => deleteItem(item.id)} class="text-red-600 hover:underline">
-									Remove
-								</button>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
+						{/each}
+					</div>
+				</CardContent>
+			</Card>
 		{/each}
 	{/if}
 </div>
+
+<style>
+	.page {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-6);
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.page-header h1 {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-8);
+		margin: 0;
+	}
+
+	.header-actions {
+		display: flex;
+		gap: var(--size-2);
+	}
+
+	.btn {
+		padding: var(--size-2) var(--size-4);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+		cursor: pointer;
+		text-decoration: none;
+		transition: all 0.2s;
+		border: none;
+	}
+
+	.btn-primary {
+		background: var(--color-primary);
+		color: var(--nord6);
+	}
+
+	.btn-primary:hover {
+		background: var(--nord9);
+	}
+
+	.btn-secondary {
+		background: var(--color-accent);
+		color: var(--color-text);
+	}
+
+	.btn-secondary:hover {
+		background: var(--color-border);
+	}
+
+	.btn-success {
+		background: var(--color-success);
+		color: var(--nord6);
+	}
+
+	.btn-success:hover {
+		opacity: 0.9;
+	}
+
+	.form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-4);
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: var(--size-4);
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-2);
+	}
+
+	.form-group label {
+		font-size: var(--font-size-1);
+		font-weight: var(--font-weight-6);
+	}
+
+	.form-actions {
+		display: flex;
+		gap: var(--size-2);
+	}
+
+	.input {
+		width: 100%;
+		padding: var(--size-2) var(--size-4);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-2);
+		font-size: var(--font-size-1);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+	}
+
+	.input:disabled {
+		background: var(--color-accent);
+	}
+
+	.search-input {
+		width: 100%;
+	}
+
+	.loading {
+		text-align: center;
+		padding: var(--size-8) 0;
+	}
+
+	.error-message {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: var(--size-8) 0;
+		color: var(--color-text-muted);
+	}
+
+
+	.item-list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.item {
+		display: flex;
+		align-items: center;
+		gap: var(--size-4);
+		padding: var(--size-3) 0;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.item:last-child {
+		border-bottom: none;
+	}
+
+	.item.expired {
+		background: rgba(191, 97, 106, 0.1);
+	}
+
+	.item.expiring {
+		background: rgba(235, 203, 139, 0.1);
+	}
+
+	.item-info {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: var(--size-2);
+	}
+
+	.item-name {
+		font-weight: var(--font-weight-6);
+	}
+
+	.item-qty {
+		color: var(--color-text-muted);
+	}
+
+	.exp-badge {
+		font-size: var(--font-size-0);
+		padding: var(--size-1) var(--size-2);
+		border-radius: 9999px;
+		background: var(--color-accent);
+		color: var(--color-text-muted);
+	}
+
+	.exp-badge.expired {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+	}
+
+	.exp-badge.expiring {
+		background: rgba(235, 203, 139, 0.2);
+		color: #d08770;
+	}
+
+	.notes {
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+	}
+
+	.item-actions {
+		display: flex;
+		gap: var(--size-2);
+	}
+
+	.link-btn {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--color-primary);
+		font-size: var(--font-size-1);
+	}
+
+	.link-btn:hover {
+		text-decoration: underline;
+	}
+
+	.link-btn.danger {
+		color: var(--color-error);
+	}
+</style>

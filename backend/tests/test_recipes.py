@@ -513,3 +513,49 @@ class TestRecipeImageUpload:
             files={"file": ("test.jpg", b"fake image", "image/jpeg")},
         )
         assert response.status_code == 404
+
+
+class TestSourceURLValidation:
+    def test_create_rejects_javascript_url(self, client, ingredient):
+        """Ensure javascript: URLs are rejected during recipe creation"""
+        response = client.post(
+            "/api/recipes",
+            json={
+                "title": "XSS Test",
+                "source_url": "javascript:alert('XSS')",
+                "ingredients": [{"ingredient_id": ingredient["id"], "quantity": "1"}],
+            },
+        )
+        assert response.status_code == 422
+        assert "source_url must use http or https scheme" in response.text
+
+    def test_update_rejects_javascript_url(self, client, ingredient):
+        """Ensure javascript: URLs are rejected during recipe update"""
+        create = client.post(
+            "/api/recipes",
+            json={
+                "title": "Test Recipe",
+                "ingredients": [{"ingredient_id": ingredient["id"], "quantity": "1"}],
+            },
+        )
+        recipe_id = create.json()["id"]
+
+        response = client.put(
+            f"/api/recipes/{recipe_id}",
+            json={"source_url": "javascript:alert('XSS')"},
+        )
+        assert response.status_code == 422
+        assert "source_url must use http or https scheme" in response.text
+
+    def test_create_accepts_valid_https_url(self, client, ingredient):
+        """Ensure valid HTTPS URLs are accepted"""
+        response = client.post(
+            "/api/recipes",
+            json={
+                "title": "Valid URL Test",
+                "source_url": "https://example.com/recipe",
+                "ingredients": [{"ingredient_id": ingredient["id"], "quantity": "1"}],
+            },
+        )
+        assert response.status_code == 201
+        assert response.json()["source_url"] == "https://example.com/recipe"

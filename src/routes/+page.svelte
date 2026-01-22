@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Card, CardHeader, CardTitle, CardContent } from '@mskalski/home-ui';
 	import type { Dashboard } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { onMount } from 'svelte';
@@ -25,65 +26,214 @@
 	};
 </script>
 
-<div class="space-y-8">
-	<h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+<div class="dashboard">
+	<div class="page-header">
+		<h1>Dashboard</h1>
+	</div>
 
 	{#if loading}
-		<div class="text-center py-12">Loading...</div>
+		<div class="loading">Loading...</div>
 	{:else if error}
-		<div class="bg-red-50 text-red-700 p-4 rounded-lg">{error}</div>
+		<div class="error-message">{error}</div>
 	{:else if dashboard}
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-			<div class="bg-white p-6 rounded-lg shadow-sm border">
-				<div class="text-3xl font-bold text-blue-600">{dashboard.total_recipes}</div>
-				<div class="text-gray-600">Recipes</div>
-			</div>
-			<div class="bg-white p-6 rounded-lg shadow-sm border">
-				<div class="text-3xl font-bold text-green-600">{dashboard.total_ingredients}</div>
-				<div class="text-gray-600">Ingredients</div>
-			</div>
-			<div class="bg-white p-6 rounded-lg shadow-sm border">
-				<div class="text-3xl font-bold text-yellow-600">{dashboard.total_favorites}</div>
-				<div class="text-gray-600">Favorites</div>
-			</div>
+		<div class="kpi-grid">
+			<Card>
+				<CardHeader>
+					<CardTitle>Recipes</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div class="kpi-value primary">{dashboard.total_recipes}</div>
+					<p class="kpi-subtitle">Total recipes</p>
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>Ingredients</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div class="kpi-value success">{dashboard.total_ingredients}</div>
+					<p class="kpi-subtitle">In database</p>
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>Favorites</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div class="kpi-value warning">{dashboard.total_favorites}</div>
+					<p class="kpi-subtitle">Starred recipes</p>
+				</CardContent>
+			</Card>
 		</div>
 
-		<div class="bg-white p-6 rounded-lg shadow-sm border">
-			<h2 class="text-xl font-semibold mb-4">Today's Meals</h2>
-			{#if dashboard.todays_meals.length === 0}
-				<p class="text-gray-500">No meals planned for today.</p>
-				<a href="/meal-planner" class="text-blue-600 hover:underline mt-2 inline-block">
-					Plan your meals
-				</a>
-			{:else}
-				<div class="space-y-4">
-					{#each dashboard.todays_meals as meal}
-						<div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-							{#if meal.recipe.primary_image_id}
-								<img
-									src={getImageUrl(meal.recipe.primary_image_id)}
-									alt={meal.recipe.title}
-									class="w-16 h-16 object-cover rounded-lg"
-								/>
-							{:else}
-								<div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-									📷
+		<Card>
+			<CardHeader>
+				<CardTitle>Today's Meals</CardTitle>
+			</CardHeader>
+			<CardContent>
+				{#if dashboard.todays_meals.length === 0}
+					<p class="empty-text">No meals planned for today.</p>
+					<a href="/meal-planner" class="link">Plan your meals</a>
+				{:else}
+					<div class="meals-list">
+						{#each dashboard.todays_meals as meal}
+							<div class="meal-item">
+								{#if meal.recipe.primary_image_id}
+									<img
+										src={getImageUrl(meal.recipe.primary_image_id)}
+										alt={meal.recipe.title}
+										class="meal-image"
+									/>
+								{:else}
+									<div class="meal-image-placeholder">📷</div>
+								{/if}
+								<div class="meal-info">
+									<div class="meal-type">{mealTypeLabels[meal.meal_type]}</div>
+									<a href="/recipes/{meal.recipe.id}" class="meal-title">
+										{meal.recipe.title}
+									</a>
+									<div class="meal-servings">{meal.servings} servings</div>
 								</div>
-							{/if}
-							<div class="flex-1">
-								<div class="text-sm text-gray-500">{mealTypeLabels[meal.meal_type]}</div>
-								<a href="/recipes/{meal.recipe.id}" class="font-medium hover:text-blue-600">
-									{meal.recipe.title}
-								</a>
-								<div class="text-sm text-gray-500">{meal.servings} servings</div>
+								{#if meal.is_completed}
+									<span class="completed-icon">✓</span>
+								{/if}
 							</div>
-							{#if meal.is_completed}
-								<span class="text-green-600">✓</span>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
+						{/each}
+					</div>
+				{/if}
+			</CardContent>
+		</Card>
 	{/if}
 </div>
+
+<style>
+	.dashboard {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-8);
+	}
+
+	.page-header h1 {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-8);
+		margin: 0;
+	}
+
+	.loading {
+		text-align: center;
+		padding: var(--size-8) 0;
+	}
+
+	.error-message {
+		background: rgba(191, 97, 106, 0.2);
+		color: var(--color-error);
+		padding: var(--size-4);
+		border-radius: var(--radius-2);
+	}
+
+	.kpi-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: var(--size-6);
+	}
+
+	.kpi-value {
+		font-size: var(--font-size-6);
+		font-weight: var(--font-weight-7);
+		margin-bottom: var(--size-2);
+	}
+
+	.kpi-value.primary {
+		color: var(--color-primary);
+	}
+
+	.kpi-value.success {
+		color: var(--color-success);
+	}
+
+	.kpi-value.warning {
+		color: #ebcb8b;
+	}
+
+	.kpi-subtitle {
+		font-size: var(--font-size-1);
+		color: var(--color-text-muted);
+		margin: 0;
+	}
+
+	.empty-text {
+		color: var(--color-text-muted);
+		margin: 0 0 var(--size-2) 0;
+	}
+
+	.link {
+		color: var(--color-primary);
+		text-decoration: none;
+	}
+
+	.link:hover {
+		text-decoration: underline;
+	}
+
+	.meals-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--size-4);
+	}
+
+	.meal-item {
+		display: flex;
+		align-items: center;
+		gap: var(--size-4);
+		padding: var(--size-4);
+		background: var(--color-bg-muted);
+		border-radius: var(--radius-2);
+	}
+
+	.meal-image {
+		width: 64px;
+		height: 64px;
+		object-fit: cover;
+		border-radius: var(--radius-2);
+	}
+
+	.meal-image-placeholder {
+		width: 64px;
+		height: 64px;
+		background: var(--color-accent);
+		border-radius: var(--radius-2);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.meal-info {
+		flex: 1;
+	}
+
+	.meal-type {
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+	}
+
+	.meal-title {
+		font-weight: var(--font-weight-6);
+		color: var(--color-text);
+		text-decoration: none;
+	}
+
+	.meal-title:hover {
+		color: var(--color-primary);
+	}
+
+	.meal-servings {
+		font-size: var(--font-size-0);
+		color: var(--color-text-muted);
+	}
+
+	.completed-icon {
+		color: var(--color-success);
+	}
+</style>
