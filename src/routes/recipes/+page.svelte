@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Card, CardContent } from '@mskalski/home-ui';
+	import { Card, CardContent, isMobile } from '@mskalski/home-ui';
 	import type { RecipeListItem, Tag, DifficultyLevel, DietaryTag } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { onMount } from 'svelte';
@@ -101,7 +101,7 @@
 					<div class="tag-row">
 						{#each tags as tag}
 							<button
-								class="tag-btn"
+								class="tag-btn tap-target"
 								class:active={selectedTagIds.includes(tag.id)}
 								onclick={() => {
 									if (selectedTagIds.includes(tag.id)) {
@@ -121,7 +121,7 @@
 					<span class="tag-label">Dietary:</span>
 					{#each allDietaryTags as tag}
 						<button
-							class="tag-btn dietary"
+							class="tag-btn dietary tap-target"
 							class:active={selectedDietaryTags.includes(tag)}
 							onclick={() => toggleDietaryTag(tag)}
 						>
@@ -159,7 +159,7 @@
 					<CardContent>
 						<div class="recipe-header">
 							<a href="/recipes/{recipe.id}" class="recipe-title">{recipe.title}</a>
-							<button onclick={() => toggleFavorite(recipe)} class="favorite-btn">
+							<button onclick={() => toggleFavorite(recipe)} class="favorite-btn tap-target">
 								{recipe.is_favorite ? '⭐' : '☆'}
 							</button>
 						</div>
@@ -198,6 +198,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: var(--size-4);
+		flex-wrap: wrap;
 	}
 
 	.page-header h1 {
@@ -336,8 +338,15 @@
 
 	.recipe-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-		gap: var(--size-6);
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: var(--size-4);
+	}
+
+	@media (min-width: 768px) {
+		.recipe-grid {
+			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			gap: var(--size-6);
+		}
 	}
 
 	.recipe-image-link {

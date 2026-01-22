@@ -34,9 +34,27 @@
 
 	.main {
 		flex: 1;
-		padding: var(--size-6);
+		padding: var(--size-4);
 		max-width: 1200px;
 		margin: 0 auto;
 		width: 100%;
+	}
+
+	@media (max-width: 767px) {
+		.main {
+			padding-top: calc(var(--size-3) * 2 + 48px);
+		}
+	}
+
+	@media (min-width: 768px) {
+		.main {
+			padding: var(--size-5);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.main {
+			padding: var(--size-6);
+		}
 	}
 </style>

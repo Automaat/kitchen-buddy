@@ -77,10 +77,10 @@
 	<div class="page-header">
 		<h1>Shopping Lists</h1>
 		<div class="header-actions">
-			<button onclick={() => (showGenerateModal = true)} class="btn btn-success">
+			<button onclick={() => (showGenerateModal = true)} class="btn btn-success tap-target">
 				Generate from Meals
 			</button>
-			<button onclick={() => (showCreateModal = true)} class="btn btn-primary">New List</button>
+			<button onclick={() => (showCreateModal = true)} class="btn btn-primary tap-target">New List</button>
 		</div>
 	</div>
 
@@ -109,8 +109,8 @@
 								{/if}
 							</div>
 							<div class="list-actions">
-								<a href="/shopping-lists/{list.id}" class="btn btn-sm btn-primary">View</a>
-								<button onclick={() => deleteList(list.id)} class="btn btn-sm btn-danger">Delete</button>
+								<a href="/shopping-lists/{list.id}" class="btn btn-sm btn-primary tap-target">View</a>
+								<button onclick={() => deleteList(list.id)} class="btn btn-sm btn-danger tap-target">Delete</button>
 							</div>
 						</div>
 						<div class="progress-section">
@@ -189,6 +189,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: var(--size-4);
+		flex-wrap: wrap;
 	}
 
 	.page-header h1 {
@@ -200,6 +202,7 @@
 	.header-actions {
 		display: flex;
 		gap: var(--size-2);
+		flex-wrap: wrap;
 	}
 
 	.btn {
