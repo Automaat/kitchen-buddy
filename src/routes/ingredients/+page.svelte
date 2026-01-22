@@ -248,7 +248,7 @@
 				<div class="border-t pt-4">
 					<h3 class="text-sm font-medium text-gray-700 mb-2">Cost Info</h3>
 					<div class="w-48">
-						<label for="costPerUnit" class="block text-xs text-gray-500 mb-1">Cost per unit ($)</label>
+						<label for="costPerUnit" class="block text-xs text-gray-500 mb-1">Cost per unit ($/100g or item)</label>
 						<input
 							id="costPerUnit"
 							type="number"

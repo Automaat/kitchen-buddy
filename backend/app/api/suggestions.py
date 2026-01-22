@@ -21,6 +21,7 @@ def get_recipe_suggestions(
         db.query(Recipe)
         .filter(Recipe.is_active.is_(True))
         .options(joinedload(Recipe.ingredients), joinedload(Recipe.images))
+        .limit(500)
         .all()
     )
 

@@ -117,14 +117,20 @@
 	function isExpiringSoon(date: string | null): boolean {
 		if (!date) return false;
 		const expDate = new Date(date);
+		expDate.setHours(0, 0, 0, 0);
 		const today = new Date();
+		today.setHours(0, 0, 0, 0);
 		const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 		return diffDays <= 3 && diffDays >= 0;
 	}
 
 	function isExpired(date: string | null): boolean {
 		if (!date) return false;
-		return new Date(date) < new Date();
+		const expDate = new Date(date);
+		expDate.setHours(0, 0, 0, 0);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		return expDate < today;
 	}
 
 	const groupedItems = $derived(
