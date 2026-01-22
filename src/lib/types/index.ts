@@ -34,6 +34,12 @@ export interface Ingredient {
 	category: IngredientCategory;
 	default_unit: string | null;
 	is_active: boolean;
+	calories: number | null;
+	protein: number | null;
+	carbs: number | null;
+	fat: number | null;
+	fiber: number | null;
+	cost_per_unit: number | null;
 	created_at: string;
 	updated_at: string;
 }
@@ -193,4 +199,55 @@ export interface CookingTimer {
 	remaining: number;
 	isRunning: boolean;
 	isPaused: boolean;
+}
+
+export interface PantryItem {
+	id: number;
+	ingredient_id: number;
+	ingredient_name: string;
+	ingredient_category: IngredientCategory;
+	quantity: number;
+	unit: string | null;
+	expiration_date: string | null;
+	notes: string | null;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface MissingIngredient {
+	ingredient_id: number;
+	ingredient_name: string;
+	required_quantity: number | null;
+	unit: string | null;
+}
+
+export interface RecipeSuggestion {
+	recipe_id: number;
+	recipe_title: string;
+	primary_image_id: number | null;
+	total_ingredients: number;
+	available_ingredients: number;
+	missing_ingredients: MissingIngredient[];
+	match_percentage: number;
+}
+
+export interface RecipeNutrition {
+	calories: number | null;
+	protein: number | null;
+	carbs: number | null;
+	fat: number | null;
+	fiber: number | null;
+}
+
+export interface IngredientCost {
+	ingredient_name: string;
+	quantity: string | null;
+	unit: string | null;
+	cost: number | null;
+}
+
+export interface RecipeCost {
+	total_cost: number | null;
+	cost_per_serving: number | null;
+	ingredient_costs: IngredientCost[];
 }

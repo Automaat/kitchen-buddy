@@ -5,6 +5,7 @@ from .shopping_list import ShoppingList, ShoppingListItem
 from .favorite import Favorite
 from .collection import Collection, RecipeCollection
 from .recipe_note import RecipeNote
+from .pantry import PantryItem
 
 __all__ = [
     "Recipe",
@@ -20,4 +21,5 @@ __all__ = [
     "Collection",
     "RecipeCollection",
     "RecipeNote",
+    "PantryItem",
 ]

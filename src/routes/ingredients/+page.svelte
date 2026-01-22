@@ -14,6 +14,12 @@
 	let name = $state('');
 	let category = $state<IngredientCategory>('other');
 	let defaultUnit = $state('');
+	let calories = $state('');
+	let protein = $state('');
+	let carbs = $state('');
+	let fat = $state('');
+	let fiber = $state('');
+	let costPerUnit = $state('');
 
 	const categories: IngredientCategory[] = [
 		'produce',
@@ -49,6 +55,12 @@
 		name = '';
 		category = 'other';
 		defaultUnit = '';
+		calories = '';
+		protein = '';
+		carbs = '';
+		fat = '';
+		fiber = '';
+		costPerUnit = '';
 		showForm = false;
 		editingId = null;
 	}
@@ -57,6 +69,12 @@
 		name = ingredient.name;
 		category = ingredient.category;
 		defaultUnit = ingredient.default_unit || '';
+		calories = ingredient.calories?.toString() || '';
+		protein = ingredient.protein?.toString() || '';
+		carbs = ingredient.carbs?.toString() || '';
+		fat = ingredient.fat?.toString() || '';
+		fiber = ingredient.fiber?.toString() || '';
+		costPerUnit = ingredient.cost_per_unit?.toString() || '';
 		editingId = ingredient.id;
 		showForm = true;
 	}
@@ -68,7 +86,13 @@
 			const data = {
 				name: name.trim(),
 				category,
-				default_unit: defaultUnit.trim() || null
+				default_unit: defaultUnit.trim() || null,
+				calories: calories ? parseFloat(calories) : null,
+				protein: protein ? parseFloat(protein) : null,
+				carbs: carbs ? parseFloat(carbs) : null,
+				fat: fat ? parseFloat(fat) : null,
+				fiber: fiber ? parseFloat(fiber) : null,
+				cost_per_unit: costPerUnit ? parseFloat(costPerUnit) : null
 			};
 
 			if (editingId) {
@@ -163,6 +187,79 @@
 						/>
 					</div>
 				</div>
+
+				<div class="border-t pt-4">
+					<h3 class="text-sm font-medium text-gray-700 mb-2">Nutrition Info (per 100g)</h3>
+					<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+						<div>
+							<label for="calories" class="block text-xs text-gray-500 mb-1">Calories</label>
+							<input
+								id="calories"
+								type="number"
+								step="0.1"
+								bind:value={calories}
+								placeholder="kcal"
+								class="w-full px-3 py-2 border rounded-lg text-sm"
+							/>
+						</div>
+						<div>
+							<label for="protein" class="block text-xs text-gray-500 mb-1">Protein (g)</label>
+							<input
+								id="protein"
+								type="number"
+								step="0.1"
+								bind:value={protein}
+								class="w-full px-3 py-2 border rounded-lg text-sm"
+							/>
+						</div>
+						<div>
+							<label for="carbs" class="block text-xs text-gray-500 mb-1">Carbs (g)</label>
+							<input
+								id="carbs"
+								type="number"
+								step="0.1"
+								bind:value={carbs}
+								class="w-full px-3 py-2 border rounded-lg text-sm"
+							/>
+						</div>
+						<div>
+							<label for="fat" class="block text-xs text-gray-500 mb-1">Fat (g)</label>
+							<input
+								id="fat"
+								type="number"
+								step="0.1"
+								bind:value={fat}
+								class="w-full px-3 py-2 border rounded-lg text-sm"
+							/>
+						</div>
+						<div>
+							<label for="fiber" class="block text-xs text-gray-500 mb-1">Fiber (g)</label>
+							<input
+								id="fiber"
+								type="number"
+								step="0.1"
+								bind:value={fiber}
+								class="w-full px-3 py-2 border rounded-lg text-sm"
+							/>
+						</div>
+					</div>
+				</div>
+
+				<div class="border-t pt-4">
+					<h3 class="text-sm font-medium text-gray-700 mb-2">Cost Info</h3>
+					<div class="w-48">
+						<label for="costPerUnit" class="block text-xs text-gray-500 mb-1">Cost per unit ($/100g or item)</label>
+						<input
+							id="costPerUnit"
+							type="number"
+							step="0.01"
+							bind:value={costPerUnit}
+							placeholder="0.00"
+							class="w-full px-3 py-2 border rounded-lg text-sm"
+						/>
+					</div>
+				</div>
+
 				<div class="flex gap-2">
 					<button
 						type="submit"
@@ -203,13 +300,16 @@
 			No ingredients found. Add some to get started!
 		</div>
 	{:else}
-		<div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+		<div class="bg-white rounded-lg shadow-sm border overflow-hidden overflow-x-auto">
 			<table class="w-full">
 				<thead class="bg-gray-50">
 					<tr>
 						<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
 						<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Category</th>
-						<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Default Unit</th>
+						<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Unit</th>
+						<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Cal</th>
+						<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">P/C/F</th>
+						<th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Cost</th>
 						<th class="px-4 py-3 text-right text-sm font-medium text-gray-700">Actions</th>
 					</tr>
 				</thead>
@@ -225,6 +325,17 @@
 								</span>
 							</td>
 							<td class="px-4 py-3 text-gray-600">{ingredient.default_unit || '-'}</td>
+							<td class="px-4 py-3 text-gray-600 text-sm">
+								{ingredient.calories ? `${ingredient.calories}` : '-'}
+							</td>
+							<td class="px-4 py-3 text-gray-600 text-sm">
+								{ingredient.protein || ingredient.carbs || ingredient.fat
+									? `${ingredient.protein || 0}/${ingredient.carbs || 0}/${ingredient.fat || 0}g`
+									: '-'}
+							</td>
+							<td class="px-4 py-3 text-gray-600 text-sm">
+								{ingredient.cost_per_unit ? `$${ingredient.cost_per_unit}` : '-'}
+							</td>
 							<td class="px-4 py-3 text-right">
 								<button
 									onclick={() => startEdit(ingredient)}

@@ -18,6 +18,8 @@ from app.schemas import (
     RecipeImportResponse,
     RecipeNoteCreate,
     RecipeNoteSchemaResponse,
+    RecipeNutritionResponse,
+    RecipeCostResponse,
 )
 from app.utils import scale_quantity, import_recipe_from_url
 
@@ -348,3 +350,118 @@ def delete_recipe_note(recipe_id: int, note_id: int, db: Session = Depends(get_d
 
     db.delete(db_note)
     db.commit()
+
+
+@router.get("/{recipe_id}/nutrition", response_model=RecipeNutritionResponse)
+def get_recipe_nutrition(recipe_id: int, servings: int | None = None, db: Session = Depends(get_db)):
+    recipe = (
+        db.query(Recipe)
+        .options(joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient))
+        .filter(Recipe.id == recipe_id)
+        .first()
+    )
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    target_servings = servings or recipe.servings
+    scale_factor = target_servings / recipe.servings if recipe.servings else 1
+
+    total_calories = 0.0
+    total_protein = 0.0
+    total_carbs = 0.0
+    total_fat = 0.0
+    total_fiber = 0.0
+
+    for ri in recipe.ingredients:
+        ing = ri.ingredient
+        if not ri.quantity:
+            continue
+
+        try:
+            qty = float(ri.quantity)
+        except (ValueError, TypeError):
+            continue
+
+        qty_factor = qty / 100  # nutrition is per 100g
+
+        if ing.calories:
+            total_calories += float(ing.calories) * qty_factor
+        if ing.protein:
+            total_protein += float(ing.protein) * qty_factor
+        if ing.carbs:
+            total_carbs += float(ing.carbs) * qty_factor
+        if ing.fat:
+            total_fat += float(ing.fat) * qty_factor
+        if ing.fiber:
+            total_fiber += float(ing.fiber) * qty_factor
+
+    total_calories *= scale_factor
+    total_protein *= scale_factor
+    total_carbs *= scale_factor
+    total_fat *= scale_factor
+    total_fiber *= scale_factor
+
+    return RecipeNutritionResponse(
+        calories=round(total_calories, 1) if total_calories else None,
+        protein=round(total_protein, 1) if total_protein else None,
+        carbs=round(total_carbs, 1) if total_carbs else None,
+        fat=round(total_fat, 1) if total_fat else None,
+        fiber=round(total_fiber, 1) if total_fiber else None,
+    )
+
+
+@router.get("/{recipe_id}/cost", response_model=RecipeCostResponse)
+def get_recipe_cost(recipe_id: int, servings: int | None = None, db: Session = Depends(get_db)):
+    recipe = (
+        db.query(Recipe)
+        .options(joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient))
+        .filter(Recipe.id == recipe_id)
+        .first()
+    )
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
+    target_servings = servings or recipe.servings
+    scale_factor = target_servings / recipe.servings if recipe.servings else 1
+
+    total_cost = 0.0
+    ingredient_costs = []
+
+    for ri in recipe.ingredients:
+        ing = ri.ingredient
+        if not ri.quantity or not ing.cost_per_unit:
+            ingredient_costs.append({
+                "ingredient_name": ing.name,
+                "quantity": ri.quantity,
+                "unit": ri.unit,
+                "cost": None,
+            })
+            continue
+
+        try:
+            qty = float(ri.quantity) * scale_factor
+        except (ValueError, TypeError):
+            ingredient_costs.append({
+                "ingredient_name": ing.name,
+                "quantity": ri.quantity,
+                "unit": ri.unit,
+                "cost": None,
+            })
+            continue
+
+        cost = float(ing.cost_per_unit) * qty
+        total_cost += cost
+        ingredient_costs.append({
+            "ingredient_name": ing.name,
+            "quantity": str(round(qty, 2)),
+            "unit": ri.unit,
+            "cost": round(cost, 2),
+        })
+
+    cost_per_serving = total_cost / target_servings if target_servings else None
+
+    return RecipeCostResponse(
+        total_cost=round(total_cost, 2) if total_cost else None,
+        cost_per_serving=round(cost_per_serving, 2) if cost_per_serving else None,
+        ingredient_costs=ingredient_costs,
+    )
