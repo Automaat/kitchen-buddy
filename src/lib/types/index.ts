@@ -192,15 +192,6 @@ export interface RecipeImportResponse {
 	source_url: string;
 }
 
-export interface CookingTimer {
-	id: string;
-	name: string;
-	duration: number;
-	remaining: number;
-	isRunning: boolean;
-	isPaused: boolean;
-}
-
 export interface PantryItem {
 	id: number;
 	ingredient_id: number;

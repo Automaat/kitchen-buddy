@@ -1,21 +1,10 @@
 <script lang="ts">
 	import { Card, CardHeader, CardTitle, CardContent } from '@mskalski/home-ui';
-	import type { Recipe, ScaledIngredient, CookingTimer, RecipeNutrition, RecipeCost } from '$lib/types';
+	import type { Recipe, ScaledIngredient, RecipeNutrition, RecipeCost } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import {
-		getTimers,
-		addTimer,
-		startTimer,
-		pauseTimer,
-		resumeTimer,
-		resetTimer,
-		removeTimer,
-		formatTime,
-		requestNotificationPermission
-	} from '$lib/stores/timers';
 	import { dietaryTagLabels, dietaryTagColors } from '$lib/constants/dietary-tags';
 
 	let recipe: Recipe | null = $state(null);
@@ -26,13 +15,9 @@
 	let error = $state<string | null>(null);
 	let targetServings = $state(4);
 
-	let newTimerName = $state('');
-	let newTimerMinutes = $state(10);
 	let newNoteContent = $state('');
 	let editingNoteId = $state<number | null>(null);
 	let editingNoteContent = $state('');
-
-	const timers = $derived(getTimers());
 
 	$effect(() => {
 		if (recipe) {
@@ -41,7 +26,6 @@
 	});
 
 	onMount(async () => {
-		requestNotificationPermission();
 		try {
 			recipe = await api.get<Recipe>(`/recipes/${$page.params.id}`);
 			loadNutritionAndCost();
@@ -100,19 +84,6 @@
 		} catch {
 			/* ignore */
 		}
-	}
-
-	function handleAddTimer() {
-		if (!newTimerName.trim() || newTimerMinutes <= 0) return;
-		const id = addTimer(newTimerName, newTimerMinutes);
-		startTimer(id);
-		newTimerName = '';
-		newTimerMinutes = 10;
-	}
-
-	function quickTimer(minutes: number) {
-		const id = addTimer(`${minutes} min timer`, minutes);
-		startTimer(id);
 	}
 
 	async function handleAddNote() {
@@ -361,56 +332,6 @@
 				</CardContent>
 			</Card>
 		{/if}
-
-		<Card>
-			<CardHeader>
-				<CardTitle>Cooking Timers</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div class="quick-timers">
-					<button onclick={() => quickTimer(5)} class="btn btn-sm btn-secondary">5 min</button>
-					<button onclick={() => quickTimer(10)} class="btn btn-sm btn-secondary">10 min</button>
-					<button onclick={() => quickTimer(15)} class="btn btn-sm btn-secondary">15 min</button>
-					<button onclick={() => quickTimer(30)} class="btn btn-sm btn-secondary">30 min</button>
-					{#if recipe.cook_time_minutes}
-						<button onclick={() => quickTimer(recipe!.cook_time_minutes!)} class="btn btn-sm btn-primary">
-							{recipe.cook_time_minutes} min (cook time)
-						</button>
-					{/if}
-				</div>
-				<div class="timer-form">
-					<input type="text" bind:value={newTimerName} placeholder="Timer name" class="input" />
-					<input type="number" bind:value={newTimerMinutes} min="1" class="input input-sm" />
-					<span class="timer-unit">min</span>
-					<button onclick={handleAddTimer} class="btn btn-primary">Add</button>
-				</div>
-				{#if timers.length > 0}
-					<div class="timer-list">
-						{#each timers as timer}
-							<div class="timer-item" class:done={timer.remaining === 0}>
-								<div class="timer-info">
-									<span class="timer-name">{timer.name}</span>
-									<span class="timer-time" class:alert={timer.remaining === 0}>{formatTime(timer.remaining)}</span>
-								</div>
-								<div class="timer-actions">
-									{#if timer.isRunning && !timer.isPaused}
-										<button onclick={() => pauseTimer(timer.id)} class="btn btn-sm btn-warning">Pause</button>
-									{:else if timer.isPaused}
-										<button onclick={() => resumeTimer(timer.id)} class="btn btn-sm btn-success">Resume</button>
-									{:else if timer.remaining > 0}
-										<button onclick={() => startTimer(timer.id)} class="btn btn-sm btn-success">Start</button>
-									{/if}
-									<button onclick={() => resetTimer(timer.id)} class="btn btn-sm btn-secondary">Reset</button>
-									<button onclick={() => removeTimer(timer.id)} class="btn btn-sm btn-danger">Remove</button>
-								</div>
-							</div>
-						{/each}
-					</div>
-				{:else}
-					<p class="empty">No active timers. Add one above or use quick buttons.</p>
-				{/if}
-			</CardContent>
-		</Card>
 
 		<Card>
 			<CardHeader>
@@ -850,75 +771,6 @@
 
 	.breakdown-cost {
 		font-weight: var(--font-weight-6);
-	}
-
-	.quick-timers {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--size-2);
-		margin-bottom: var(--size-4);
-	}
-
-	.timer-form {
-		display: flex;
-		gap: var(--size-2);
-		align-items: center;
-		margin-bottom: var(--size-4);
-	}
-
-	.timer-form .input:first-of-type {
-		flex: 1;
-	}
-
-	.timer-form .input-sm {
-		width: 70px;
-	}
-
-	.timer-unit {
-		color: var(--color-text-muted);
-	}
-
-	.timer-list {
-		display: flex;
-		flex-direction: column;
-		gap: var(--size-2);
-	}
-
-	.timer-item {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: var(--size-3);
-		background: var(--color-bg-muted);
-		border-radius: var(--radius-2);
-	}
-
-	.timer-item.done {
-		background: rgba(191, 97, 106, 0.1);
-	}
-
-	.timer-info {
-		display: flex;
-		align-items: center;
-		gap: var(--size-3);
-	}
-
-	.timer-name {
-		font-weight: var(--font-weight-6);
-	}
-
-	.timer-time {
-		font-family: monospace;
-		font-size: var(--font-size-4);
-	}
-
-	.timer-time.alert {
-		color: var(--color-error);
-	}
-
-	.timer-actions {
-		display: flex;
-		gap: var(--size-2);
 	}
 
 	.note-form {
