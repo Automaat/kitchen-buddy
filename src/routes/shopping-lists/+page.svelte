@@ -150,7 +150,7 @@
 	onCancel={() => (showGenerateModal = false)}
 	onConfirm={generateList}
 	confirmText="Generate"
-	confirmVariant="success"
+	confirmVariant="primary"
 	confirmDisabled={!generatingName.trim()}
 >
 	<div class="modal-form">
