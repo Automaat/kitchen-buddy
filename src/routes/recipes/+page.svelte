@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Card, CardContent, isMobile } from '@mskalski/home-ui';
+	import { Card, CardContent } from '@mskalski/home-ui';
 	import type { RecipeListItem, Tag, DifficultyLevel, DietaryTag } from '$lib/types';
 	import { api, getImageUrl } from '$lib/utils';
 	import { onMount } from 'svelte';
